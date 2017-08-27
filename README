@@ -1,0 +1,25 @@
+
+URL to get election results: 
+	ftp://ftpgis1.tlc.state.tx.us/elections
+More info on leaflet draw:
+	http://rpubs.com/bhaskarvk/leaflet-draw
+
+things to add:
+
+export shapefile with edited features
+save edited features to overall polygon
+give team name for edited features.
+send edited features to admin
+
+
+add live leaderboard
+add algorithm to score peoples maps
+score by equality in d/r and , by closest to total pop, ask judge to see if shapes look not too crazy/gerried
+
+
+write up how to play game
+
+reactive to house rep pie chart
+reative to dem/repub graph
+
+add lines to both bar charts with actual number

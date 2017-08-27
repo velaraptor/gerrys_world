@@ -1,0 +1,83 @@
+  CREATE TABLE election_results 
+(COUNTY char(30), FIPS smallint, VTD varchar, 
+CNTYVTD varchar, OFFICE varchar, NAME varchar, PARTY char(1), INCUMBENT char(1), VOTES int);
+
+COPY election_results FROM '/path/to/csv/ZIP_CODES.txt' DELIMITER ',' CSV;
+
+
+SELECT
+m.gid,SUM(m.proportion*m.d) AS d, SUM(m.proportion*m.r) AS r
+FROM
+(SELECT b.cntyvtd, t.gid, 
+(st_area( st_intersection( 
+    b.geom, 
+    t.geom ) ) / 
+ st_area(b.geom ) ) 
+ AS proportion,d,r,winner
+ from tx_congress t, 
+ voting_districts_1 b
+ JOIN 
+ president_race ON 
+ president_race.cntyvtd=b.cntyvtd
+ 
+ where st_intersects( 
+     b.geom, 
+     t.geom) 
+ and (st_area( 
+     st_intersection( 
+         b.geom, 
+         t.geom)) / 
+      st_area( b.geom )) >.9)m
+GROUP BY m.gid
+
+
+
+SELECT b.gid, t.gid, 
+(st_area( st_intersection( 
+    b.geom, 
+    t.geom ) ) / 
+ st_area(b.geom ) ) 
+ AS proportion
+ from tx_congress t, 
+ tx_tracts b
+ where st_intersects( 
+     b.geom, 
+     t.geom) 
+ and (st_area( 
+     st_intersection( 
+         b.geom, 
+         t.geom)) / 
+      st_area( b.geom )) >.01
+
+
+CREATE TABLE income 
+(COUNTY char(30), FIPS smallint, VTD varchar, 
+CNTYVTD varchar, OFFICE varchar, NAME varchar, PARTY char(1), INCUMBENT char(1), VOTES int);
+
+
+CREATE TABLE race 
+(GEOID varchar, GEOID2 varchar, GEODISPLAYLABEL varchar, 
+HD01_VD01 double precision, HD02_VD01 varchar,
+HD01_VD02 double precision, HD02_VD02 varchar,
+HD01_VD03 double precision, HD02_VD03 double precision,
+HD01_VD04 double precision, HD02_VD04 double precision,
+HD01_VD05 double precision, HD02_VD05 double precision,
+HD01_VD06 double precision, HD02_VD06 double precision,
+HD01_VD07 double precision, HD02_VD07 double precision,
+HD01_VD08 double precision, HD02_VD08 double precision,
+HD01_VD09 double precision, HD02_VD09 double precision,
+HD01_VD10 double precision, HD02_VD10 double precision,
+HD01_VD11 double precision, HD02_VD11 double precision,
+HD01_VD12 double precision, HD02_VD12 varchar,
+HD01_VD13 double precision, HD02_VD13 double precision,
+HD01_VD14 double precision, HD02_VD14 double precision,
+HD01_VD15 double precision, HD02_VD15 double precision,
+HD01_VD16 double precision, HD02_VD16 double precision,
+HD01_VD17 double precision, HD02_VD17 double precision,
+HD01_VD18 double precision, HD02_VD18 double precision,
+HD01_VD19 double precision, HD02_VD19 double precision,
+HD01_VD20 double precision, HD02_VD20 double precision,
+HD01_VD21 double precision, HD02_VD21 double precision
+);
+
+

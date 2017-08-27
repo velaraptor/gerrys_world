@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <!-- Meta, title, CSS, favicons, etc. -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" href="../img/favicon.png">
+    <title>Gerry's World</title>
+    <style type="text/css">.vertical-center {
+  height:100%;
+  width:100%;
+
+  text-align: center;  /* align the inline(-block) elements horizontally */
+}
+
+.vertical-center:before {    /* create a full-height inline block pseudo=element */
+  content: " ";
+  display: inline-block;
+  vertical-align: middle;    /* vertical alignment of the inline element */
+  height: 100%;
+}
+
+.Absolute-Center {
+  margin: auto;
+
+  top: 0; left: 0; bottom: 0; right: 0;
+}
+
+#contentimage:hover {
+    opacity:0.7;
+}
+
+.jumbotron p {
+  font-size: 14px !important;
+}
+.Absolute-Center.is-Responsive {
+  width: 50%; 
+  height: 50%;
+  min-width: 600px;
+  max-width: 600px;
+  padding: 40px;
+}
+.jumbotron > hr {
+    border-top-color: #282828 !important; 
+}
+body {
+background: url('../img/background.png');
+
+}
+</style>
+
+    <!-- Bootstrap -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+    <link href="custom.min.css" rel="stylesheet">
+    <!-- Custom Theme Style -->
+  </head>
+
+  <body>
+    <div class ="container-fluid">
+      <div class="col-md-6 col-md-push-3">
+        <div class="Absolute-Center is-Responsive">
+      <div class="jumbotron vertical-center">
+              <img src=../img/logo.png>
+              <hr>
+              <p class="text-primary"><b>Interactive Game Modifying Congressional Districts in Texas</b></p>
+
+  
+            
+
+
+              <div>
+                <a href='https://accounts.google.com/o/oauth2/auth?response_type=code&client_id=109365349953-6gftkgddne6phcjvvcpg6ktid4425flg.apps.googleusercontent.com&redirect_uri=http%3A%2F%2F127.0.0.1%3A6262&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile&state=gerrysworld3940582393&access_type=online&approval_prompt=auto'><img src=../img/google.png height=50 id="contentimage"></a>
+              </div>
+              <br>
+              <p>OR</p>
+              <div><a href="http://127.0.0.1:6262" class="btn btn-primary">Skip Login</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  </body>
+</html>

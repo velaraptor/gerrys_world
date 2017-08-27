@@ -1,0 +1,691 @@
+##leaflet spatial data libs requirements
+library(rgdal)    
+library(sp)   
+library(rgeos)
+library(rmapshaper)
+library(leaflet)
+library(leaflet.extras)
+##database
+library(RPostgreSQL)
+library(DBI)
+
+##data manipulation tables
+library(dplyr)
+library(data.table)
+
+##shiny & graphs
+library(shinythemes)
+library(shiny)
+library(highcharter)
+library(googleAuthR)
+library(googleID)
+library(rpostgis)
+
+source("helper.R")
+
+options(googleAuthR.scopes.selected = c("https://www.googleapis.com/auth/userinfo.email",
+                                        "https://www.googleapis.com/auth/userinfo.profile"))
+##live version
+options("googleAuthR.webapp.client_id" = "109365349953-6isj32t7hjojludfdsv9lgq77kc34sd9.apps.googleusercontent.com")
+options("googleAuthR.webapp.client_secret" = "vpuc-GFQckA2JIYopsP7fsNG")
+
+##local version
+##options("googleAuthR.webapp.client_id" = "109365349953-6gftkgddne6phcjvvcpg6ktid4425flg.apps.googleusercontent.com")
+##options("googleAuthR.webapp.client_secret" = "Y_HmkwFs3UGK8wLWTIQj8-5d")
+options("googleAuthR.securitycode" = "gerrysworld3940582393")
+
+
+isValidEmail <- function(x) {
+	if(x==""){
+		TRUE
+
+		}else{
+grepl("\\<[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}\\>", as.character(x), 
+ignore.case=TRUE)
+}
+}
+
+
+server = function(input, output, session) {
+	rv <- reactiveValues(
+        login = FALSE
+    )
+
+	access_token <- callModule(googleAuth, "loginButton", approval_prompt = "force")
+	fixed_spdf=reactiveValues(
+		)
+	userDetails <- reactive({
+        validate(
+            need(access_token(), "")
+        )
+
+        rv$login <- TRUE
+        with_shiny(get_user_info, shiny_access_token = access_token())
+    })
+    output$user_image = renderUI({
+    	  validate(
+            need(userDetails(), HTML(""))
+        )
+    	  HTML(paste0("<div class='row'>
+  <div class='col-sm-2'><img class='img-circle' src='",
+  userDetails()$image$url,
+  
+  "' height='30px'></div><div class='col-sm-10'>",
+  p(userDetails()$displayName),
+  "</div></div>"))
+    	})
+
+    observe({
+    	if(rv$login){
+    		output$n=reactive({
+	 			return("FALSE")
+	 			})
+    	}
+    	else{
+    	    output$n=reactive({
+	 			return("TRUE")
+	 			})
+    	}
+    	outputOptions(output, 'n', suspendWhenHidden=FALSE)
+    	})
+
+    observe({
+    	validate(
+            need(userDetails(), ""))
+    		if(is.null(userDetails()$gender)){
+    			gender = "NA"
+    			}else{
+    				gender = userDetails()$gender
+    			}
+            user_info=data.frame(userDetails()$displayName,gender,userDetails()$emails$value)
+            names(user_info)=c("displayname","gender","email")
+            connection = dbConnect(
+					drv,
+					port="5432",
+					host="safeatxx.cnj4vinpaowc.us-west-2.rds.amazonaws.com",
+					user="superuser",
+					dbname="christophvel",
+					password="Tygafe4*"
+				)
+            count=dbGetQuery(connection,paste0("SELECT COUNT(*) FROM usr_info WHERE email ='",userDetails()$emails$value,"'"))
+            dbDisconnect(connection)
+            if(count$count==0){
+            	connection = dbConnect(
+					drv,
+					port="5432",
+					host="safeatxx.cnj4vinpaowc.us-west-2.rds.amazonaws.com",
+					user="superuser",
+					dbname="christophvel",
+					password="Tygafe4*"
+				)
+            	dbWriteTable(connection, c("public","usr_info"), value=user_info,append=TRUE, row.names=FALSE)
+            	dbDisconnect(connection)
+            }
+        
+    	})
+
+	fixed_spdf$df <- NULL
+	drv = dbDriver("PostgreSQL")
+	connection = dbConnect(
+					drv,
+					port="5432",
+					host="safeatxx.cnj4vinpaowc.us-west-2.rds.amazonaws.com",
+					user="superuser",
+					dbname="christophvel",
+					password="Tygafe4*"
+				)
+    congressional_geoms = dbGetQuery(connection,
+    	"SELECT gid,cd115fp ,st_astext(geom) AS geom FROM tx_congress"
+    	)
+    total_amount = dbGetQuery(connection,
+    	"SELECT SUM(d)/(SUM(r)+SUM(d)) AS d_percent, SUM(r)/(SUM(r)+SUM(d)) AS r_percent FROM president_race"
+    	)
+    summary_stats = dbGetQuery(connection,"SELECT * FROM house_district_summ_stats")
+    
+    ##read WKT of POSTGIS query for congressional districts
+    for(i in seq(nrow(congressional_geoms))){
+		if(i == 1){
+			p <- readWKT(congressional_geoms$geom[i], id = congressional_geoms$gid[i])
+		}
+		else{
+			p=rbind(p,readWKT(congressional_geoms$geom[i], id = congressional_geoms$gid[i]))
+			}
+	}
+    
+    ##our simplicifcation from rmapshaper library
+    simplified = ms_simplify(p,keep  = .025)
+    
+    t = data.frame(congressional_geoms,row.names = congressional_geoms$gid)
+    congress_geom_sppdf = SpatialPolygonsDataFrame(simplified,t[-3])
+    crs.geo = CRS("+proj=longlat +datum=WGS84 +ellps=WGS84")
+    proj4string(congress_geom_sppdf) = crs.geo
+    
+    ##lets put the data that we already computed of the votes per congressional district 
+    district_agg = read.csv("data-1502248004410.csv")
+    names(district_agg) = c("gid","d","r")
+    ##find winner
+    district_agg$winner = ifelse(district_agg$d >= district_agg$r, "D", "R")
+    district_spdf = merge(congress_geom_sppdf,district_agg, by = "gid")
+    
+    ##make district_spdf reactive, be able to edit winner, and population totals, and geoms 
+
+    district_summary=read.csv("district_summary.csv")
+    income_by_district=read.csv("income_by_district.csv")
+    race_numbers=read.csv("race_by_district.csv")
+
+    static_race_numbers=read.csv("race_by_district.csv")
+    static_votes_numbers = district_spdf@data
+    district_spdf=merge(district_spdf,race_numbers,by="gid")
+
+    dbDisconnect(connection)
+    
+    factpal = colorFactor(c("#0000FF","#FF0000"), district_spdf$winner)
+    popup = paste0("<h6><font color='#000000'>District Number:</font><b><font color='#9933cc'> ",
+    			district_spdf@data$cd115fp,
+    			"</h5></font></b><b><font color='#FF4C4C'>Republican Votes:</font></b> ",
+    			prettyNum(
+    				round(
+    					district_spdf@data$r
+    				),
+    				big.mark = ","
+    			),
+    			"<br><b><font color='#4C4CFF'>Democrat Votes: </font></b> ",
+				prettyNum(
+					round(
+						district_spdf@data$d
+					),
+					big.mark=",")
+			)
+
+	output$map = renderLeaflet({
+		leaflet() %>% 
+		addProviderTiles(
+			providers$CartoDB.DarkMatter,
+			options = providerTileOptions(minZoom = 6, maxZoom = 10),
+			group="Default") %>%
+        setView(
+        	lng = -97.74, 
+        	lat = 31.2643298807937, 
+        	zoom = 6) %>% 
+        addTiles(
+        	urlTemplate = "http://safeatx.com/map_tiles/race/{z}/{x}/{y}.png",
+        	group = "Hispanic",
+        	options = providerTileOptions(minZoom = 6, maxZoom = 10)) %>% 
+        addTiles(
+        	urlTemplate = "http://safeatx.com/map_tiles/white/{z}/{x}/{y}.png",
+        	group = "White",
+        	options = providerTileOptions(minZoom = 6, maxZoom = 10)) %>%
+        addTiles(
+        	urlTemplate="http://safeatx.com/map_tiles/black/{z}/{x}/{y}.png",
+        	group = "Black",
+        	options = providerTileOptions(minZoom = 6, maxZoom = 10)) %>%
+        addTiles(
+        	urlTemplate = "http://safeatx.com/map_tiles/asian/{z}/{x}/{y}.png",
+        	group = "Asian",
+        	options = providerTileOptions(minZoom = 6, maxZoom = 10)) %>%
+        addTiles(
+        	urlTemplate = "http://safeatx.com/map_tiles/native/{z}/{x}/{y}.png",
+        	group = "Native",
+        	options = providerTileOptions(minZoom = 6, maxZoom = 10)) %>%
+        addTiles(
+        	urlTemplate = "http://safeatx.com/map_tiles/repubs/{z}/{x}/{y}.png",
+        	group = "Republicans",
+        	options = providerTileOptions(minZoom = 6, maxZoom = 10)) %>%
+        addTiles(
+        	urlTemplate = "http://safeatx.com/map_tiles/dems/{z}/{x}/{y}.png",
+        	group = "Democrats",
+        	options = providerTileOptions(minZoom = 6, maxZoom = 10)) %>%
+        addPolygons( 
+			data = district_spdf,
+			fillOpacity = 0.2,
+			color = 'white',
+			fillColor = ~factpal(winner),
+			weight = 1.5,
+			popup = popup,
+			layerId = district_spdf@data$gid,
+			label = paste0("District ",district_spdf@data$cd115fp),
+			smoothFactor = 0.2,
+			stroke = TRUE, 
+			opacity = 1,
+			group='Congressional Districts') %>%
+        addDrawToolbar(
+        	polylineOptions = FALSE,
+        	polygonOptions = FALSE,
+			circleOptions = FALSE,
+			rectangleOptions = FALSE,
+			markerOptions = FALSE,
+			targetGroup = 'Congressional Districts',
+			editOptions = editToolbarOptions(
+				selectedPathOptions = selectedPathOptions(maintainColor=TRUE),remove=F
+			)
+		) %>%
+        addLayersControl(
+        	overlayGroups = c(
+        		'Congressional Districts',
+        		"Default",
+        		"Hispanic",
+        		"White",
+        		"Black",
+        		"Asian",
+        		"Native",
+        		"Republicans",
+        		"Democrats"), 
+        	options = layersControlOptions(collapsed=TRUE)) %>% 
+        hideGroup("Hispanic") %>% 
+        hideGroup("White") %>% 
+        hideGroup("Black") %>% 
+        hideGroup("Asian") %>% 
+        hideGroup("Native") %>% 
+        addLegend("bottomright", 
+        	colors =
+        		c("#ff2124", "#f3f019","#00e121", "#ff7f00", "#a6cee3"),
+        	labels = 
+        		c("White","Black","Hispanic","Asian","Native"),
+        	title = "Racial Dot Legend",
+        	opacity = 1)
+      
+    })
+    
+    output$pres_pie = renderHighchart({
+    	highchart() %>% 
+      	hc_add_series_labels_values(
+      		c("Democrats","Republicans"),
+			c(round(total_amount$d_percent,2),round(total_amount$r_percent,2)),
+			type = "pie",
+			colors = c("#4C4CFF","#FF4C4C"),
+			name = "Percent of Votes",
+			dataLabels = list(enabled = FALSE)) %>%
+		hc_title(
+			text = "2016 Presidential Results",
+			style = list(color="#ffffff"))
+    })
+
+
+    observe({
+    	dist_data=fixed_spdf$df@data
+    	dist_data$total=rowSums(dist_data[,c(6:10)])
+    	dis_numbers = dist_data[dist_data$cd115fp==input$district_num,]
+    	ic = income_by_district[income_by_district$gid==dis_numbers$gid,]
+
+		ss=static_race_numbers[static_race_numbers$gid==dis_numbers$gid,]
+		st = static_votes_numbers[static_votes_numbers$gid==dis_numbers$gid,]
+		
+		summary = district_summary[district_summary$district==as.numeric(input$district_num),2]
+		
+		output$votes_chart=renderHighchart({
+			highchart() %>% 
+			hc_add_series_labels_values(
+				c("Republican","Democrat"), 
+				c(round(dis_numbers$r),round(dis_numbers$d)), 
+				name = "Votes",
+				colorByPoint = TRUE, 
+				type = "column",
+				colors=c("#FF4C4C","#4C4CFF")) %>% 
+          hc_xAxis(
+				categories = 
+				c("Republican","Democrat")) %>% 
+          hc_add_series(
+				data=c(round(st$r),round(st$d)), 
+				name = "Actual Votes",
+				type = "column",
+				color="#c081e0")
+		})
+
+		output$text = renderUI({
+			HTML(
+				paste(
+					h6(summary),
+					h6(
+						paste0(
+							"Total Population: ", 
+							prettyNum(round(dis_numbers$total),big.mark = ",")
+						)
+					)
+				)
+			)
+		})
+
+		output$race_chart=renderHighchart({
+			highchart() %>% 
+				hc_add_series_labels_values(
+					c("White","Black","Hispanic","Asian","Native"), 
+					c(round(dis_numbers$white),round(dis_numbers$black),round(dis_numbers$hispanic),round(dis_numbers$asian),round(dis_numbers$native)), 
+					name = "Population",
+					colorByPoint = TRUE, 
+					type = "column",
+					colors = c("#ff2124",'#f3f019',"#44ca4a",'#ff7f00','#a6cee3')) %>% 
+				hc_xAxis(
+					categories = 
+						c("White","Black","Hispanic","Asian","Native")
+				) %>% 
+				hc_add_series(
+					data=
+					c(round(ss$white),round(ss$black),round(ss$hispanic),round(ss$asian),round(ss$native)), 
+					name = "Actual Population",
+					type = "column",
+					color = "#c081e0")
+		})
+
+		output$income=renderUI({
+			HTML(
+				paste(
+					h6(
+						paste0(
+							"Median Income: $", 
+							prettyNum(ic$round,big.mark = ",")
+						)
+					),
+					hr()
+				)
+			)
+		})
+	})
+
+	fixed_spdf$df = district_spdf
+
+	total_districts_by_party = reactive({
+    		fixed_spdf$df@data %>% group_by(winner) %>% summarise(count=n())
+    	})
+
+	
+
+	population = reactive({
+		total = as.data.frame(
+			cbind(
+				cd115fp=fixed_spdf$df@data$cd115fp,
+				total=fixed_spdf$df@data$hispanic+
+						fixed_spdf$df@data$white+
+						fixed_spdf$df@data$black+
+						fixed_spdf$df@data$asian+
+						fixed_spdf$df@data$native)
+			)
+		total$total=as.numeric(as.character(total$total))
+		total$rmse=abs(summary_stats$mean-total$total)
+		for(i in 1:nrow(total)){
+			if(total$rmse[i] <= summary_stats$std*3){
+				total$check[i] = "good"
+			}else if(total$rmse[i] > summary_stats$std*3){
+				total$check[i] = "fix"
+			}
+		
+		}
+		counts_pop = total %>% group_by(check) %>% summarise(count=n())
+		if(counts_pop[counts_pop$check=='good',2]<36){
+			fixes=total[total$check=='fix',]
+			paste0("Population districts are not even! Districts to fix: ",   paste(fixes$cd115fp,collapse = ", "))
+		}else{
+			"Population is even across districts."
+		}
+		
+
+		})
+
+	observe({
+		output$pop = renderUI({HTML(paste("<center>",p(population()),"</center>"))})
+
+		})
+
+	observe({
+		ddd = as.data.frame(total_districts_by_party()$count/sum(total_districts_by_party()$count))
+		leaning = ddd[2,]-total_amount$r_percent
+		if(abs(leaning)>=0 & abs(leaning)<=.04){
+			output$score=renderUI({HTML(paste("<center>",p("Good Districts!"),"</center>"))})
+		}else if(leaning>.04 & leaning<=.1){
+			output$score=renderUI({HTML(paste("<center>",p("Districts are Leaning Right!"),"</center>"))})
+		}else if(leaning>.1 & leaning<=.2){
+			output$score=renderUI({HTML(paste("<center>",p("Districts are Leaning More Right!"),"</center>"))})
+		}else if(leaning>.2 & leaning<=.3){
+			output$score=renderUI({HTML(paste("<center>",p("Districts are Leaning Extremely Right!"),"</center>"))})
+		}else if(leaning>.3 & leaning<=1){
+			output$score=renderUI({HTML(paste("<center>",p("Are you trying to eliminate Democrat Representation?"),"</center>"))})
+		}else if(leaning<(-.03) & leaning>=(-.1)){
+			output$score=renderUI({HTML(paste("<center>",p("Districts are Leaning Left!"),"</center>"))})
+		}else if(leaning<(-.1) & leaning>=(-.2)){
+			output$score=renderUI({HTML(paste("<center>",p("Districts are Leaning More Left!"),"</center>"))})
+		}else if(leaning< (-.2) & leaning>=(-.3)){
+			output$score=renderUI({HTML(paste("<center>",p("Districts are Leaning Extremely Left!"),"</center>"))})
+		}else if(leaning<(-.3)){
+			output$score=renderUI({HTML(paste("<center>",p("Are you trying to eliminate Republican Representation?"),"</center>"))})
+		}
+		})
+	 output$rep_pie = renderHighchart({
+		highchart() %>% 
+		hc_add_series_labels_values(
+			c("Democrats","Republicans"),
+			total_districts_by_party()$count,
+			type = "pie",
+			colors = c("#4C4CFF","#FF4C4C"),
+			name = "US Representatives",
+			dataLabels = list(enabled = FALSE)) %>%
+      hc_title(
+      	text = "Representatives by Party",
+      	style = list(color="#ffffff"))
+    })
+	observeEvent(input$map_draw_edited_features,{
+		withProgress(message = 'Getting Population Numbers', value = 0, {
+		if(typeof(input$map_draw_edited_features)=="list"){
+			ix = input$map_draw_edited_features
+			connection = dbConnect(drv,
+                        port="5432",
+						host="safeatxx.cnj4vinpaowc.us-west-2.rds.amazonaws.com",
+						user="superuser",
+						dbname="christophvel",
+						password="Tygafe4*"
+                          )
+			write(RJSONIO::toJSON(ix),"temp/test.json")
+			incProgress(.25, detail = paste("Almost done"))
+					new_data_race = dbGetQuery(connection,
+				paste0(
+					"WITH DATA AS (SELECT '",
+					RJSONIO::toJSON(ix), 
+					"'::json AS fc)
+					SELECT
+					m.gid,SUM(m.proportion*m.hispanic) AS hispanic, SUM(m.proportion*m.white) AS white,
+					SUM(m.proportion*m.black) AS black,SUM(m.proportion*m.asian) AS asian,SUM(m.proportion*m.native) AS native
+					FROM
+					(SELECT (feat->'properties'->>'layerId')::int AS gid,
+					    b.gid AS gid_2, n.hispanic,
+					n.white,
+					n.black,
+					n.native,
+					n.asian,
+					St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326) AS geom,
+					(St_area(St_intersection(b.geom, St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326))) / St_area(b.geom)) AS proportion
+					FROM tx_tracts b,
+					(SELECT Json_array_elements(fc->'features') AS feat
+					 FROM DATA) AS f,
+					(SELECT geoid2,
+					hd01_vd12 AS hispanic,
+					hd01_vd03 AS white,
+					hd01_vd04 AS black,
+					hd01_vd05 AS native,
+					hd01_vd06 AS asian
+					FROM race)n 
+					WHERE 
+					St_intersects(b.geom, St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326))
+					AND n.geoid2=CONCAT(b.statefp,b.countyfp,b.tractce)
+					AND (St_area(St_intersection(b.geom, St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326))) / St_area(b.geom)) >.6)m
+					GROUP BY m.gid;"))
+			new_votes_data=dbGetQuery(
+				connection,
+				paste0(
+					"WITH DATA AS (SELECT '",
+					RJSONIO::toJSON(ix), 
+					"'::json AS fc)                   
+					SELECT
+					m.gid,SUM(m.proportion*m.d) AS d,SUM(m.proportion*m.r) AS r
+					FROM
+					(SELECT (feat->'properties'->>'layerId')::int AS gid,
+					    b.cntyvtd AS cntyvtd,
+					n.r,
+					n.d,
+					(St_area(St_intersection(b.geom_1, St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326))) / St_area(b.geom_1)) AS proportion
+					FROM voting_districts_1 b,
+					(SELECT Json_array_elements(fc->'features') AS feat
+					 FROM DATA) AS f,
+					(SELECT * FROM president_race)n
+					WHERE 
+					St_intersects(b.geom_1, St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326))
+					AND 
+					  n.cntyvtd=b.cntyvtd
+					AND 
+					(St_area(St_intersection(b.geom_1, St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326))) / St_area(b.geom_1)) >.1)m
+					GROUP BY m.gid;"))
+			dbDisconnect(connection)
+			incProgress(.5, detail = paste("Almost done"))
+
+			g=geojsonio::geojson_read("temp/test.json",what = "sp")
+
+			g=merge(g,new_votes_data,by.x="layerId",by.y="gid")
+
+			g$winner = ifelse(g$d >= g$r, "D", "R")
+
+			for(i in 1:nrow(g)){
+			  g$cd115fp[i]=fixed_spdf$df@data[fixed_spdf$df$gid==g$layerId[i],2]
+			}
+
+
+			names(g)[1]="gid"
+			g=merge(g,new_data_race,by="gid")
+			g=g[,-2]
+			g=g[c(1,5,2,3,4,6:10)]
+
+
+
+
+			for(i in 1:nrow(g)){
+			  fixed_spdf$df@data[fixed_spdf$df$gid==g$gid[i],]=g@data[i,]
+			  fixed_spdf$df@polygons[fixed_spdf$df$gid==g$gid[i]]=g@polygons[i]
+			}
+			incProgress(.25, detail = paste("Almost done"))
+   			popup = paste0("<h6><font color='#000000'>District Number:</font><b><font color='#9933cc'> ",
+    			fixed_spdf$df@data$cd115fp,
+    			"</h5></font></b><b><font color='#FF4C4C'>Republican Votes:</font></b> ",
+    			prettyNum(
+    				round(
+    					fixed_spdf$df@data$r
+    				),
+    				big.mark = ","
+    			),
+    			"<br><b><font color='#4C4CFF'>Democrat Votes: </font></b> ",
+				prettyNum(
+					round(
+						fixed_spdf$df@data$d
+					),
+					big.mark=",")
+			)
+			    observe({
+    	  validate(
+            need(userDetails(), HTML(""))
+        )
+    	fixed_spdf$df$user_name = userDetails()$emails$value
+
+    	})
+
+			##need to fix coordinates and popup 
+			leafletProxy("map") %>% 
+			clearShapes() %>%
+			addPolygons( 
+			data = fixed_spdf$df,
+			fillOpacity = 0.2,
+			color = 'white',
+			fillColor = ~factpal(winner),
+			weight = 1.5,
+			popup = popup,
+			layerId = fixed_spdf$df@data$gid,
+			label = paste0("District ",fixed_spdf$df@data$cd115fp),
+			smoothFactor = 0.2,
+			stroke = TRUE, 
+			opacity = 1,
+			group='Congressional Districts')
+			
+
+		}
+	})
+		})
+
+	
+	output$emailerror = renderUI({
+		validate(need(isValidEmail(input$teamname),
+       HTML(
+       	paste("Please type a valid e-mail address")
+       	)
+       )
+		)
+		})
+	observe({
+	if(rv$login){
+			output$btnSave <- downloadHandler(
+			function() 
+				{
+		
+					paste0("gerrymander_districts",
+							"_",
+							userDetails()$displayName , 
+							".zip")
+
+				}, 
+			function(file) {
+						connection = dbConnect(
+					drv,
+					port="5432",
+					host="safeatxx.cnj4vinpaowc.us-west-2.rds.amazonaws.com",
+					user="superuser",
+					dbname="christophvel",
+					password="Tygafe4*"
+				)
+			pgInsert(connection, name = c("public", "user_data"), data.obj = fixed_spdf$df,overwrite = F,new.id = "id")
+			dbDisconnect(connection)
+				shp = writeRasterZip(
+				fixed_spdf$df, 
+				file, userDetails()$displayName,
+				format="ESRI Shapefile")
+
+				})
+		}else{
+				output$btnSave <- downloadHandler(
+
+			function() 
+			{
+		
+				validate(need(isValidEmail(input$teamname),
+      			 paste("Please Input a valid E-mail address")))
+				paste0("gerrymander_districts",
+						"_",
+						input$teamname , 
+						".zip")
+
+			}, 
+			function(file) {
+				connection = dbConnect(
+					drv,
+					port="5432",
+					host="safeatxx.cnj4vinpaowc.us-west-2.rds.amazonaws.com",
+					user="superuser",
+					dbname="christophvel",
+					password="Tygafe4*"
+				)
+			fixed_spdf$df$user_name=input$teamname
+			pgInsert(connection, name = c("public", "user_data"), data.obj = fixed_spdf$df,overwrite = F,new.id = "id")
+			dbDisconnect(connection)
+
+
+				shp = writeRasterZip(
+				fixed_spdf$df, 
+				file, input$teamname,
+				format="ESRI Shapefile")
+
+			}
+			)
+
+		}
+		})
+
+
+	observe({
+    if (rv$login) {
+        shinyjs::onclick("loginButton-googleAuthUi",
+            shinyjs::runjs("window.location.href = 'http://localhost:8001/www/login.html';"))
+    }
+})
+}

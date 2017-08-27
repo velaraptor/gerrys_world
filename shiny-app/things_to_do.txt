@@ -1,0 +1,56 @@
+THINGS TO DO:::
+
+##need to make the voting districts faster, consider simplifying the data
+##create new aws w/ shiny-server
+##write up how to play 
+##add google analytics
+##name of submission
+##see sumbisiions later
+##ad graph of population numbers for all districts
+
+
+
+https://auth0.com/blog/adding-authentication-to-shiny-server/
+https://stackoverflow.com/questions/43404058/starting-shiny-app-after-password-input-with-shinydashboard
+https://mark.shinyapps.io/googleAuthRexample/
+https://lesliemyint.wordpress.com/2017/01/01/creating-a-shiny-app-with-google-login/
+
+SELECT |/(sum((h.mean-n.total_test)^2)/36) AS rmse
+
+FROM 
+(SELECT (hispanic+white+black+native+asian)AS total_test FROM user_data WHERE user_name ='christophvel@gmail.com')n,
+house_district_summ_stats AS h;
+
+
+
+##mean to use 
+SELECT * FROM house_district_summ_stats
+
+stay within 1 to 4 standard devs to 
+
+SELECT * FROM
+(SELECT
+	x.gid,x.cd115fp,x.rmse,x.mean,x.std,x.total_test,
+	CASE 
+       	WHEN x.rmse<=x.std*3 THEN 'good' 
+		WHEN x.rmse>x.std*3 THEN 'fix'
+	END
+FROM
+(SELECT 
+     n.gid,
+     n.cd115fp,
+     round(abs(h.mean-n.total_test)) AS rmse, 
+     h.mean, 
+     h.std, 
+     n.total_test 
+  FROM 
+	(SELECT 
+        	gid,cd115fp,
+        	(hispanic+white+black+native+asian)AS total_test 
+        FROM 
+        	user_data 
+        WHERE 
+        	user_name ='christophvel@gmail.com')n,
+	house_district_summ_stats AS h
+)x)r
+WHERE r.case='fix'
