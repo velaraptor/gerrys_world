@@ -75,6 +75,6 @@ runApp('shiny-app',port=6262)
 * **Chris Vela**
 
 ## Acknowledgments
-In addition to using PostGIS queries to achieve intersection of all the geographical polygons, we would want to the guys who create [Leaflet.Extras](https://github.com/bhaskarvk/leaflet.extras) that allowed us to edit polygons in a leaflet framework. 
+In addition to using PostGIS queries to achieve intersection of all the geographical polygons, we would want to thank the guys who created [Leaflet.Extras](https://github.com/bhaskarvk/leaflet.extras) that allowed us to edit polygons in a leaflet framework. 
 
 Additionally, QGIS plugin [QTiles](https://github.com/nextgis/QTiles) for allowing us to create map tiles with dot densities for demographics. 
