@@ -5,9 +5,11 @@ library(rgeos)
 library(rmapshaper)
 library(leaflet)
 library(leaflet.extras)
+
 ##database
 library(RPostgreSQL)
 library(DBI)
+library(rpostgis)
 
 ##data manipulation tables
 library(dplyr)
@@ -19,42 +21,20 @@ library(shiny)
 library(highcharter)
 library(googleAuthR)
 library(googleID)
-library(rpostgis)
+
 
 source("helper.R")
-
-options(googleAuthR.scopes.selected = c("https://www.googleapis.com/auth/userinfo.email",
-                                        "https://www.googleapis.com/auth/userinfo.profile"))
-##live version
-options("googleAuthR.webapp.client_id" = "109365349953-6isj32t7hjojludfdsv9lgq77kc34sd9.apps.googleusercontent.com")
-options("googleAuthR.webapp.client_secret" = "vpuc-GFQckA2JIYopsP7fsNG")
-
-##local version
-##options("googleAuthR.webapp.client_id" = "109365349953-6gftkgddne6phcjvvcpg6ktid4425flg.apps.googleusercontent.com")
-##options("googleAuthR.webapp.client_secret" = "Y_HmkwFs3UGK8wLWTIQj8-5d")
-options("googleAuthR.securitycode" = "gerrysworld3940582393")
-
-
-isValidEmail <- function(x) {
-	if(x==""){
-		TRUE
-
-		}else{
-grepl("\\<[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}\\>", as.character(x), 
-ignore.case=TRUE)
-}
-}
+source("postgres_creds.R")
 
 
 server = function(input, output, session) {
-	rv <- reactiveValues(
+	rv = reactiveValues(
         login = FALSE
     )
 
-	access_token <- callModule(googleAuth, "loginButton")
-	fixed_spdf=reactiveValues(
-		)
-	userDetails <- reactive({
+	access_token = callModule(googleAuth, "loginButton")
+	fixed_spdf = reactiveValues()
+	userDetails = reactive({
         validate(
             need(access_token(), "")
         )
@@ -62,45 +42,47 @@ server = function(input, output, session) {
         rv$login <- TRUE
         with_shiny(get_user_info, shiny_access_token = access_token())
     })
+
     output$user_image = renderUI({
-    	  validate(
-            need(userDetails(), HTML(""))
-        )
-    	  HTML(paste0("<div class='row'>
-  <div class='col-sm-2'><img class='img-circle' src='",
-  userDetails()$image$url,
-  
-  "' height='30px'></div><div class='col-sm-10'>",
-  p(userDetails()$displayName),
-  "</div></div>"))
-    	})
+		validate(
+			need(userDetails(), HTML(""))
+		)
+		HTML(
+			paste0("<div class='row'><div class='col-sm-2'><img class='img-circle' src='",
+  					userDetails()$image$url,
+  					"' height='30px'></div><div class='col-sm-10'>",
+  					p(userDetails()$displayName),
+  					"</div></div>"
+  			)
+  		)
+    })
 
     observe({
     	if(rv$login){
     		output$n=reactive({
 	 			return("FALSE")
-	 			})
+	 		})
     	}
     	else{
-    	    output$n=reactive({
-	 			return("TRUE")
+    	    	output$n=reactive({
+	 				return("TRUE")
 	 			})
     	}
     	outputOptions(output, 'n', suspendWhenHidden=FALSE)
-    	})
+    })
 
     observe({
     	if(is.null(input$map_shape_click)){
     		output$msc=reactive({
 	 			return("FALSE")
-	 			})
+	 		})
     		}else{
     			output$msc=reactive({
-	 			return("TRUE")
-	 			})
+	 				return("TRUE")
+	 				})
     		}
-    		outputOptions(output, 'msc', suspendWhenHidden=FALSE)
-    	})
+    	outputOptions(output, 'msc', suspendWhenHidden=FALSE)
+    })
 
     observe({
     	validate(
@@ -112,41 +94,19 @@ server = function(input, output, session) {
     			}
             user_info=data.frame(userDetails()$displayName,gender,userDetails()$emails$value)
             names(user_info)=c("displayname","gender","email")
-            connection = dbConnect(
-					drv,
-					port="5432",
-					host="safeatxx.cnj4vinpaowc.us-west-2.rds.amazonaws.com",
-					user="superuser",
-					dbname="christophvel",
-					password="Tygafe4*"
-				)
+            connection = connection_creds()
             count=dbGetQuery(connection,paste0("SELECT COUNT(*) FROM usr_info WHERE email ='",userDetails()$emails$value,"'"))
             dbDisconnect(connection)
             if(count$count==0){
-            	connection = dbConnect(
-					drv,
-					port="5432",
-					host="safeatxx.cnj4vinpaowc.us-west-2.rds.amazonaws.com",
-					user="superuser",
-					dbname="christophvel",
-					password="Tygafe4*"
-				)
+            	connection = connection_creds()
             	dbWriteTable(connection, c("public","usr_info"), value=user_info,append=TRUE, row.names=FALSE)
             	dbDisconnect(connection)
             }
         
-    	})
+    })
 
 	fixed_spdf$df <- NULL
-	drv = dbDriver("PostgreSQL")
-	connection = dbConnect(
-					drv,
-					port="5432",
-					host="safeatxx.cnj4vinpaowc.us-west-2.rds.amazonaws.com",
-					user="superuser",
-					dbname="christophvel",
-					password="Tygafe4*"
-				)
+	connection = connection_creds()
     congressional_geoms = dbGetQuery(connection,
     	"SELECT gid,cd115fp ,st_astext(geom) AS geom FROM tx_congress"
     	)
@@ -320,9 +280,6 @@ server = function(input, output, session) {
 			style = list(color="#ffffff",fontSize='10px'))
     })
 
-
-
-
     observe({
     	click<-input$map_shape_click
     	if(is.null(click))
@@ -417,9 +374,7 @@ server = function(input, output, session) {
 
 	total_districts_by_party = reactive({
     		fixed_spdf$df@data %>% group_by(winner) %>% summarise(count=n())
-    	})
-
-	
+    })
 
 	population = reactive({
 		total = as.data.frame(
@@ -449,8 +404,7 @@ server = function(input, output, session) {
 			"Population is even across districts."
 		}
 		
-
-		})
+	})
 
 	observe({
 		output$pop = renderUI({HTML(paste("<center><h6><font color='#2a9fd6'>",population(),"</font></h6></center>"))})
@@ -480,6 +434,7 @@ server = function(input, output, session) {
 			output$score=renderUI({HTML(paste("<center>",h6("Are you trying to eliminate Republican Representation?"),"</center>"))})
 		}
 		})
+
 	 output$rep_pie = renderHighchart({
 		highchart() %>% 
 		hc_add_series_labels_values(
@@ -494,17 +449,12 @@ server = function(input, output, session) {
       	text = "Representatives by Party",
       	style = list(color="#ffffff",fontSize='10px'))
     })
+
 	observeEvent(input$map_draw_edited_features,{
 		withProgress(message = 'Getting Population Numbers', value = 0, {
 		if(typeof(input$map_draw_edited_features)=="list"){
 			ix = input$map_draw_edited_features
-			connection = dbConnect(drv,
-                        port="5432",
-						host="safeatxx.cnj4vinpaowc.us-west-2.rds.amazonaws.com",
-						user="superuser",
-						dbname="christophvel",
-						password="Tygafe4*"
-                          )
+			connection = connection_creds()
 			write(RJSONIO::toJSON(ix),"temp/test.json")
 			incProgress(.25, detail = paste("Almost done"))
 					new_data_race = dbGetQuery(connection,
@@ -630,22 +580,26 @@ server = function(input, output, session) {
 			smoothFactor = 0.2,
 			stroke = TRUE, 
 			opacity = 1,
-			group='Congressional Districts')
+			group='Congressional Districts',
+			highlightOptions = highlightOptions(
+                color='#A8A8A8', opacity = 1, weight = 3, fillOpacity = .4,
+                bringToFront = TRUE, sendToBack = TRUE))
 			
 
 		}
 	})
-		})
+	})
 
 	
 	output$emailerror = renderUI({
 		validate(need(isValidEmail(input$teamname),
-       HTML(
-       	paste("Please type a valid e-mail address")
-       	)
-       )
+       			HTML(
+       				paste("Please type a valid e-mail address")
+       			)
+       		)
 		)
-		})
+	})
+
 	observe({
 	if(rv$login){
 			output$btnSave <- downloadHandler(
@@ -659,20 +613,14 @@ server = function(input, output, session) {
 
 				}, 
 			function(file) {
-						connection = dbConnect(
-					drv,
-					port="5432",
-					host="safeatxx.cnj4vinpaowc.us-west-2.rds.amazonaws.com",
-					user="superuser",
-					dbname="christophvel",
-					password="Tygafe4*"
-				)
-			pgInsert(connection, name = c("public", "user_data"), data.obj = fixed_spdf$df,overwrite = F,new.id = "id")
-			dbDisconnect(connection)
+				connection = connection_creds()
+				pgInsert(connection, name = c("public", "user_data"), data.obj = fixed_spdf$df,overwrite = F,new.id = "id")
+				dbDisconnect(connection)
 				shp = writeRasterZip(
-				fixed_spdf$df, 
-				file, userDetails()$displayName,
-				format="ESRI Shapefile")
+						fixed_spdf$df, 
+						file, 
+						userDetails()$displayName,
+						format="ESRI Shapefile")
 
 				})
 		}else{
@@ -690,37 +638,28 @@ server = function(input, output, session) {
 
 			}, 
 			function(file) {
-				connection = dbConnect(
-					drv,
-					port="5432",
-					host="safeatxx.cnj4vinpaowc.us-west-2.rds.amazonaws.com",
-					user="superuser",
-					dbname="christophvel",
-					password="Tygafe4*"
-				)
-			fixed_spdf$df$user_name=input$teamname
-			pgInsert(connection, name = c("public", "user_data"), data.obj = fixed_spdf$df,overwrite = F,new.id = "id")
-			dbDisconnect(connection)
-
-
+				connection = connection_creds()
+				fixed_spdf$df$user_name = input$teamname
+				pgInsert(connection, name = c("public", "user_data"), data.obj = fixed_spdf$df,overwrite = F,new.id = "id")
+				dbDisconnect(connection)
 				shp = writeRasterZip(
-				fixed_spdf$df, 
-				file, input$teamname,
-				format="ESRI Shapefile")
+						fixed_spdf$df, 
+						file,
+						input$teamname,
+						format="ESRI Shapefile")
 
 			}
 			)
 
 		}
-		})
-
+	})
 
 	observe({
-    if (rv$login) {
-        shinyjs::onclick("loginButton-googleAuthUi",
-            shinyjs::runjs("window.location.href = 'http://localhost:8001/www/login.html';"))
-    }
-})
+    	if (rv$login) {
+        	shinyjs::onclick("loginButton-googleAuthUi",
+            	shinyjs::runjs("window.location.href = 'http://localhost:8001/www/login.html';"))
+    	}
+	})
 
 
 }

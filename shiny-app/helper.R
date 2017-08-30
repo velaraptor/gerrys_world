@@ -31,3 +31,22 @@ writeRasterZip <- function(x, file, filename, format, ...) {
   file.copy(paste0(filename, ".zip"), file)
   file.remove(paste0(filename, ".zip"))
 }
+
+isValidEmail <- function(x) {
+	if(x==""){
+		TRUE
+		}else{
+		grepl("\\<[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}\\>", as.character(x), ignore.case=TRUE)
+	}
+}
+
+options(googleAuthR.scopes.selected = c("https://www.googleapis.com/auth/userinfo.email",
+                                        "https://www.googleapis.com/auth/userinfo.profile"))
+##live version
+options("googleAuthR.webapp.client_id" = "109365349953-6isj32t7hjojludfdsv9lgq77kc34sd9.apps.googleusercontent.com")
+options("googleAuthR.webapp.client_secret" = "vpuc-GFQckA2JIYopsP7fsNG")
+
+##local version
+##options("googleAuthR.webapp.client_id" = "109365349953-6gftkgddne6phcjvvcpg6ktid4425flg.apps.googleusercontent.com")
+##options("googleAuthR.webapp.client_secret" = "Y_HmkwFs3UGK8wLWTIQj8-5d")
+options("googleAuthR.securitycode" = "gerrysworld3940582393")
