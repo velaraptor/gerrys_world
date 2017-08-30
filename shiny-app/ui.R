@@ -58,46 +58,35 @@ body{
 						p("• Click on the Edit button ", img(src='edit.png')," to edit the districts."),
 						p("• The goal is to make the district representation as close to the election results, while maintaining close to equal population representation."),
 						p("• Double click on vertex points to edit districts then save to see how it changes demographics/election results."),
-						p("• Create a team name and submit your districts to be scored.")
+						p("• Create a team name and submit your districts to be scored."),
+						p("• Click on district to get more information.")
 						),
 
   					column(
-  						width = 8,
-         				leafletOutput("map",height = "610px")
+  						width = 7,
+         				leafletOutput("map",height = "630px")
          			),
-         			column(width=2,
+         			column(width=3,
 					htmlOutput("score"),
 					htmlOutput("pop"),
 					hr(),
-         				highchartOutput("pres_pie", height = "270px"),
-                		highchartOutput("rep_pie", height = "260px")
-  						)
+					fluidRow(
+						column(width=6,
+         				highchartOutput("pres_pie", height = "200px")),column(width=6,
+                		highchartOutput("rep_pie", height = "200px"))
+                		),hr(),htmlOutput("districtname"),
+				htmlOutput("text"),
+				htmlOutput("income")
+  						
+
+  					)
 						
                 	
                 	
          
-  				),
-				hr(),
-				selectInput("district_num", 
-					"District Demographics:",
-		            c("District 1" = "01", "District 2" = "02", "District 3" = "03",
-		              "District 4" = "04", "District 5" = "05", "District 6" = "06",
-		              "District 7" = "07", "District 8" = "08", "District 9" = "09",
-		              "District 10" = "10", "District 11" = "11", "District 12" = "12",
-		              "District 13" = "13", "District 14" = "14", "District 15" = "15",
-		              "District 16" = "16", "District 17" = "17", "District 18" = "18",
-		              "District 19" = "19", "District 20" = "20", "District 21" = "21",
-		              "District 22" = "22", "District 23" = "23", "District 24" = "24",
-		              "District 25" = "25", "District 26" = "26", "District 27" = "27",
-		              "District 28" = "28", "District 29" = "29", "District 30" = "30",
-		              "District 31" = "31", "District 32" = "32", "District 33" = "33",
-		              "District 34" = "34", "District 35" = "35", "District 36" = "36"
-             		),
-             		selected = "01"
-             	),
-				htmlOutput("text"),
-				htmlOutput("income"),
-				fluidRow(
+  				),fluidRow(
+  				hr(),
+  				htmlOutput('districtname_header'),
 					column(
 						width=6,
 						highchartOutput("votes_chart", height = "300px")

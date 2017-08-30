@@ -51,7 +51,7 @@ server = function(input, output, session) {
         login = FALSE
     )
 
-	access_token <- callModule(googleAuth, "loginButton", approval_prompt = "force")
+	access_token <- callModule(googleAuth, "loginButton")
 	fixed_spdf=reactiveValues(
 		)
 	userDetails <- reactive({
@@ -153,7 +153,7 @@ server = function(input, output, session) {
 	}
     
     ##our simplicifcation from rmapshaper library
-    simplified = ms_simplify(p,keep  = .025)
+    simplified = ms_simplify(p,keep  = .022)
     
     t = data.frame(congressional_geoms,row.names = congressional_geoms$gid)
     congress_geom_sppdf = SpatialPolygonsDataFrame(simplified,t[-3])
@@ -235,6 +235,9 @@ server = function(input, output, session) {
         	urlTemplate = "http://safeatx.com/map_tiles/dems/{z}/{x}/{y}.png",
         	group = "Democrats",
         	options = providerTileOptions(minZoom = 6, maxZoom = 10)) %>%
+       
+  		addMiniMap(tiles=providers$CartoDB.DarkMatter,toggleDisplay = TRUE,
+    position = "bottomleft") %>%
         addPolygons( 
 			data = district_spdf,
 			fillOpacity = 0.2,
@@ -295,22 +298,27 @@ server = function(input, output, session) {
 			colors = c("#4C4CFF","#FF4C4C"),
 			name = "Percent of Votes",
 			dataLabels = list(enabled = FALSE)) %>%
+      	hc_tooltip(style = list(fontSize='10px')) %>%
 		hc_title(
-			text = "2016 Presidential Results",
-			style = list(color="#ffffff"))
+			text = "Presidential Results",
+			style = list(color="#ffffff",fontSize='10px'))
     })
 
 
     observe({
+    	click<-input$map_shape_click
+    	if(is.null(click))
+            return()
+
     	dist_data=fixed_spdf$df@data
     	dist_data$total=rowSums(dist_data[,c(6:10)])
-    	dis_numbers = dist_data[dist_data$cd115fp==input$district_num,]
+    	dis_numbers = dist_data[dist_data$gid==click$id,]
     	ic = income_by_district[income_by_district$gid==dis_numbers$gid,]
 
 		ss=static_race_numbers[static_race_numbers$gid==dis_numbers$gid,]
 		st = static_votes_numbers[static_votes_numbers$gid==dis_numbers$gid,]
 		
-		summary = district_summary[district_summary$district==as.numeric(input$district_num),2]
+		summary = district_summary[district_summary$district==as.numeric(dis_numbers$cd115fp),2]
 		
 		output$votes_chart=renderHighchart({
 			highchart() %>% 
@@ -331,10 +339,18 @@ server = function(input, output, session) {
 				color="#c081e0")
 		})
 
+		output$districtname=renderUI({
+			HTML(paste(h5("District ",as.numeric(dis_numbers$cd115fp))))
+			})
+
+		output$districtname_header=renderUI({
+			HTML(paste(h3("District ",as.numeric(dis_numbers$cd115fp), "Demographics")))
+			})
+
 		output$text = renderUI({
 			HTML(
 				paste(
-					h6(summary),
+					p(summary),
 					h6(
 						paste0(
 							"Total Population: ", 
@@ -374,8 +390,7 @@ server = function(input, output, session) {
 							"Median Income: $", 
 							prettyNum(ic$round,big.mark = ",")
 						)
-					),
-					hr()
+					)
 				)
 			)
 		})
@@ -412,7 +427,7 @@ server = function(input, output, session) {
 		counts_pop = total %>% group_by(check) %>% summarise(count=n())
 		if(counts_pop[counts_pop$check=='good',2]<36){
 			fixes=total[total$check=='fix',]
-			paste0("Population districts are not even! Districts to fix: ",   paste(fixes$cd115fp,collapse = ", "))
+			paste0("Population districts are not even!", br(),"Districts to fix: ",   paste(fixes$cd115fp,collapse = ", "))
 		}else{
 			"Population is even across districts."
 		}
@@ -421,7 +436,7 @@ server = function(input, output, session) {
 		})
 
 	observe({
-		output$pop = renderUI({HTML(paste("<center>",p(population()),"</center>"))})
+		output$pop = renderUI({HTML(paste("<center><h6><font color='#2a9fd6'>",population(),"</font></h6></center>"))})
 
 		})
 
@@ -429,23 +444,23 @@ server = function(input, output, session) {
 		ddd = as.data.frame(total_districts_by_party()$count/sum(total_districts_by_party()$count))
 		leaning = ddd[2,]-total_amount$r_percent
 		if(abs(leaning)>=0 & abs(leaning)<=.04){
-			output$score=renderUI({HTML(paste("<center>",p("Good Districts!"),"</center>"))})
+			output$score=renderUI({HTML(paste("<center>",h6("Good Districts!"),"</center>"))})
 		}else if(leaning>.04 & leaning<=.1){
-			output$score=renderUI({HTML(paste("<center>",p("Districts are Leaning Right!"),"</center>"))})
+			output$score=renderUI({HTML(paste("<center>",h6("Districts are Leaning Right!"),"</center>"))})
 		}else if(leaning>.1 & leaning<=.2){
-			output$score=renderUI({HTML(paste("<center>",p("Districts are Leaning More Right!"),"</center>"))})
+			output$score=renderUI({HTML(paste("<center>",h6("Districts are Leaning More Right!"),"</center>"))})
 		}else if(leaning>.2 & leaning<=.3){
-			output$score=renderUI({HTML(paste("<center>",p("Districts are Leaning Extremely Right!"),"</center>"))})
+			output$score=renderUI({HTML(paste("<center>",h6("Districts are Leaning Extremely Right!"),"</center>"))})
 		}else if(leaning>.3 & leaning<=1){
-			output$score=renderUI({HTML(paste("<center>",p("Are you trying to eliminate Democrat Representation?"),"</center>"))})
+			output$score=renderUI({HTML(paste("<center>",h6("Are you trying to eliminate Democrat Representation?"),"</center>"))})
 		}else if(leaning<(-.03) & leaning>=(-.1)){
-			output$score=renderUI({HTML(paste("<center>",p("Districts are Leaning Left!"),"</center>"))})
+			output$score=renderUI({HTML(paste("<center>",h6("Districts are Leaning Left!"),"</center>"))})
 		}else if(leaning<(-.1) & leaning>=(-.2)){
-			output$score=renderUI({HTML(paste("<center>",p("Districts are Leaning More Left!"),"</center>"))})
+			output$score=renderUI({HTML(paste("<center>",h6("Districts are Leaning More Left!"),"</center>"))})
 		}else if(leaning< (-.2) & leaning>=(-.3)){
-			output$score=renderUI({HTML(paste("<center>",p("Districts are Leaning Extremely Left!"),"</center>"))})
+			output$score=renderUI({HTML(paste("<center>",h6("Districts are Leaning Extremely Left!"),"</center>"))})
 		}else if(leaning<(-.3)){
-			output$score=renderUI({HTML(paste("<center>",p("Are you trying to eliminate Republican Representation?"),"</center>"))})
+			output$score=renderUI({HTML(paste("<center>",h6("Are you trying to eliminate Republican Representation?"),"</center>"))})
 		}
 		})
 	 output$rep_pie = renderHighchart({
@@ -457,9 +472,10 @@ server = function(input, output, session) {
 			colors = c("#4C4CFF","#FF4C4C"),
 			name = "US Representatives",
 			dataLabels = list(enabled = FALSE)) %>%
+		hc_tooltip(style = list(fontSize='10px')) %>%
       hc_title(
       	text = "Representatives by Party",
-      	style = list(color="#ffffff"))
+      	style = list(color="#ffffff",fontSize='10px'))
     })
 	observeEvent(input$map_draw_edited_features,{
 		withProgress(message = 'Getting Population Numbers', value = 0, {
@@ -688,4 +704,6 @@ server = function(input, output, session) {
             shinyjs::runjs("window.location.href = 'http://localhost:8001/www/login.html';"))
     }
 })
+
+
 }
