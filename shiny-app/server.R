@@ -457,7 +457,7 @@ server = function(input, output, session) {
 			connection = connection_creds()
 			write(RJSONIO::toJSON(ix),"temp/test.json")
 			incProgress(.25, detail = paste("Almost done"))
-					new_data_race = dbGetQuery(connection,
+			new_data_race = dbGetQuery(connection,
 				paste0(
 					"WITH DATA AS (SELECT '",
 					RJSONIO::toJSON(ix), 
@@ -489,7 +489,7 @@ server = function(input, output, session) {
 					AND n.geoid2=CONCAT(b.statefp,b.countyfp,b.tractce)
 					AND (St_area(St_intersection(b.geom, St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326))) / St_area(b.geom)) >.6)m
 					GROUP BY m.gid;"))
-			new_votes_data=dbGetQuery(
+			new_votes_data = dbGetQuery(
 				connection,
 				paste0(
 					"WITH DATA AS (SELECT '",
