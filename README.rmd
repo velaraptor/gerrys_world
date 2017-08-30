@@ -61,6 +61,8 @@ install.packages('rmapshaper')
 install.packages('rgeos')
 install.packages('sp')
 install.packages('leaflet.extras')
+install.packages('RJSONIO')
+install.packages('geojsonio')
 devtools::install_github("MarkEdmondson1234/googleID")
 ```
 If you need the credentials to the database, please contact me here or @ [Twitter](https://www.twitter.com/velaraptor).
