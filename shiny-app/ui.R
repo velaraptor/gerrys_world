@@ -84,7 +84,7 @@ body{
                 	
                 	
          
-  				),fluidRow(
+  				),conditionalPanel(condition="output.msc=='TRUE'",fluidRow(
   				hr(),
   				htmlOutput('districtname_header'),
 					column(
@@ -95,6 +95,7 @@ body{
          				width=6,
          				highchartOutput("race_chart", height = "300px")
          			)
+      			)
       			)
 		),
 		tabPanel("How to Play",

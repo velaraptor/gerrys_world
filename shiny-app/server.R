@@ -90,6 +90,19 @@ server = function(input, output, session) {
     	})
 
     observe({
+    	if(is.null(input$map_shape_click)){
+    		output$msc=reactive({
+	 			return("FALSE")
+	 			})
+    		}else{
+    			output$msc=reactive({
+	 			return("TRUE")
+	 			})
+    		}
+    		outputOptions(output, 'msc', suspendWhenHidden=FALSE)
+    	})
+
+    observe({
     	validate(
             need(userDetails(), ""))
     		if(is.null(userDetails()$gender)){
@@ -179,17 +192,17 @@ server = function(input, output, session) {
 
     dbDisconnect(connection)
     
-    factpal = colorFactor(c("#0000FF","#FF0000"), district_spdf$winner)
-    popup = paste0("<h6><font color='#000000'>District Number:</font><b><font color='#9933cc'> ",
+    factpal = colorFactor(c("#3E66F3","#ff6750"), district_spdf$winner)
+    popup = paste0("<h6><font color='#000000'>District Number:</font><b><font color='#2a9fd6'> ",
     			district_spdf@data$cd115fp,
-    			"</h5></font></b><b><font color='#FF4C4C'>Republican Votes:</font></b> ",
+    			"</h5></font></b><b><font color='#ff6750'>Republican Votes:</font></b> ",
     			prettyNum(
     				round(
     					district_spdf@data$r
     				),
     				big.mark = ","
     			),
-    			"<br><b><font color='#4C4CFF'>Democrat Votes: </font></b> ",
+    			"<br><b><font color='#3E66F3'>Democrat Votes: </font></b> ",
 				prettyNum(
 					round(
 						district_spdf@data$d
@@ -204,7 +217,7 @@ server = function(input, output, session) {
 			options = providerTileOptions(minZoom = 6, maxZoom = 10),
 			group="Default") %>%
         setView(
-        	lng = -97.74, 
+        	lng = -99.2, 
         	lat = 31.2643298807937, 
         	zoom = 6) %>% 
         addTiles(
@@ -237,10 +250,10 @@ server = function(input, output, session) {
         	options = providerTileOptions(minZoom = 6, maxZoom = 10)) %>%
        
   		addMiniMap(tiles=providers$CartoDB.DarkMatter,toggleDisplay = TRUE,
-    position = "bottomleft") %>%
+    				position = "bottomleft") %>%
         addPolygons( 
 			data = district_spdf,
-			fillOpacity = 0.2,
+			fillOpacity = 0.3,
 			color = 'white',
 			fillColor = ~factpal(winner),
 			weight = 1.5,
@@ -250,7 +263,10 @@ server = function(input, output, session) {
 			smoothFactor = 0.2,
 			stroke = TRUE, 
 			opacity = 1,
-			group='Congressional Districts') %>%
+			group='Congressional Districts',
+			highlightOptions = highlightOptions(
+                color='#A8A8A8', opacity = 1, weight = 3, fillOpacity = .4,
+                bringToFront = TRUE, sendToBack = TRUE)) %>%
         addDrawToolbar(
         	polylineOptions = FALSE,
         	polygonOptions = FALSE,
@@ -295,7 +311,7 @@ server = function(input, output, session) {
       		c("Democrats","Republicans"),
 			c(round(total_amount$d_percent,2),round(total_amount$r_percent,2)),
 			type = "pie",
-			colors = c("#4C4CFF","#FF4C4C"),
+			colors = c("#3E66F3","#ff6750"),
 			name = "Percent of Votes",
 			dataLabels = list(enabled = FALSE)) %>%
       	hc_tooltip(style = list(fontSize='10px')) %>%
@@ -305,11 +321,12 @@ server = function(input, output, session) {
     })
 
 
+
+
     observe({
     	click<-input$map_shape_click
     	if(is.null(click))
             return()
-
     	dist_data=fixed_spdf$df@data
     	dist_data$total=rowSums(dist_data[,c(6:10)])
     	dis_numbers = dist_data[dist_data$gid==click$id,]
@@ -328,7 +345,7 @@ server = function(input, output, session) {
 				name = "Votes",
 				colorByPoint = TRUE, 
 				type = "column",
-				colors=c("#FF4C4C","#4C4CFF")) %>% 
+				colors=c("#FF4C4C","#3E66F3")) %>% 
           hc_xAxis(
 				categories = 
 				c("Republican","Democrat")) %>% 
@@ -469,7 +486,7 @@ server = function(input, output, session) {
 			c("Democrats","Republicans"),
 			total_districts_by_party()$count,
 			type = "pie",
-			colors = c("#4C4CFF","#FF4C4C"),
+			colors = c("#3E66F3","#ff6750"),
 			name = "US Representatives",
 			dataLabels = list(enabled = FALSE)) %>%
 		hc_tooltip(style = list(fontSize='10px')) %>%
@@ -574,16 +591,16 @@ server = function(input, output, session) {
 			  fixed_spdf$df@polygons[fixed_spdf$df$gid==g$gid[i]]=g@polygons[i]
 			}
 			incProgress(.25, detail = paste("Almost done"))
-   			popup = paste0("<h6><font color='#000000'>District Number:</font><b><font color='#9933cc'> ",
+   			popup = paste0("<h6><font color='#000000'>District Number:</font><b><font color='#2a9fd6'> ",
     			fixed_spdf$df@data$cd115fp,
-    			"</h5></font></b><b><font color='#FF4C4C'>Republican Votes:</font></b> ",
+    			"</h5></font></b><b><font color='#ff6750'>Republican Votes:</font></b> ",
     			prettyNum(
     				round(
     					fixed_spdf$df@data$r
     				),
     				big.mark = ","
     			),
-    			"<br><b><font color='#4C4CFF'>Democrat Votes: </font></b> ",
+    			"<br><b><font color='#3E66F3'>Democrat Votes: </font></b> ",
 				prettyNum(
 					round(
 						fixed_spdf$df@data$d
