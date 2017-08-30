@@ -1,25 +1,71 @@
+# Gerry's World
+![LOGO](shiny-app/img/logo.png?raw=true)
 
-URL to get election results: 
-	ftp://ftpgis1.tlc.state.tx.us/elections
-More info on leaflet draw:
-	http://rpubs.com/bhaskarvk/leaflet-draw
+### Table of Contents
+- [Project Description](#project-description)
+- [Data](#data)
+- [Roadmap](#roadmap)
+- [Development](#development)
+- [Authors](#authors)
+- [Acknowledgments](#acknowledgments)
+## Project Description
+Gerry's World is a Shiny application primarily create in R. This application allows for a user to modify existing congressional districts in Texas to create new lines that are equal in population and lean towards the actual state voting. 
 
-things to add:
+Our hope is that we can not only teach people how gerrymandering works at a state level, but potentially allow users to crowd source the lines to help legislators and the courts get a better idea of what the citizens of Texas believe are just district lines. 
 
-export shapefile with edited features
-save edited features to overall polygon
-give team name for edited features.
-send edited features to admin
+## Data
 
+The data used in the backend on our Postgres Database includes:
+* Current ACS Census Tract Data 
+	* Income
+	* Race
+	* Total Population
+* [2016 Presidential Results](ftp://ftpgis1.tlc.state.tx.us/elections)
+* Shapefiles for Congressional Districts, Voting Districts, and Census Tracts
 
+## Roadmap
 add live leaderboard
-add algorithm to score peoples maps
-score by equality in d/r and , by closest to total pop, ask judge to see if shapes look not too crazy/gerried
-
 
 write up how to play game
+## Development
+To start this Shiny App on your local computer, first make sure you have gdal installed.
+```
+brew install gdal
+```
+If you haven't uploaded the most recent version of R, download [here](https://cran.r-project.org/). 
 
-reactive to house rep pie chart
-reative to dem/repub graph
+When you first open R, execute this code to correctly download all the dependent libraries. 
+```R 
+install.packages('devtools')
+install.packages('leaflet')
+install.packages('dplyr')
+install.packages('RPostgreSQL')
+install.packages('DBI')
+install.packages('shinythemes')
+install.packages('shiny')
+install.packages('highcharter')
+install.packages('googleAuthR')
+install.packages('data.table')
+install.packages('rpostgis')
+install.packages('rgdal')
+install.packages('rmapshaper')
+install.packages('rgeos')
+install.packages('sp')
+install.packages('leaflet.extras')
+devtools::install_github("MarkEdmondson1234/googleID")
+```
+If you need the credentials to the database, please contact me here or @ [Twitter](https://www.twitter.com/velaraptor).
 
-add lines to both bar charts with actual number
+Lastly within the directory of this github repo on your local machine, run this code to get an instance of the shiny app on your local machine @ http://localhost:6262.
+
+```R 
+library(shiny)
+runApp('shiny-app',port=6262)
+```
+## Authors 
+* **Chris Vela**
+
+## Acknowledgments
+In addition to using PostGIS queries to achieve intersection of all the geographical polygons, we would want to the guys who create [Leaflet.Extras](https://github.com/bhaskarvk/leaflet.extras) that allowed us to edit polygons in a leaflet framework. 
+
+Additionally, QGIS plugin [QTiles](https://github.com/nextgis/QTiles) for allowing us to create map tiles with dot densities for demographics. 
