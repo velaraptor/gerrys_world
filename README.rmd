@@ -37,6 +37,7 @@ The app has a native Google Auth login. This a production server so it will not 
 * ~~Save simplified congressional districts to database, to unburden load on app making polygons simplified.~~ 
 * Fix potential error with native population numbers. 
 * QA Test the shit out of it. 
+* Coastal Districts don't have valid geoms, ST_MAKEVALID()
 
 ## Development
 To start this Shiny App on your local computer, first make sure you have gdal installed.
