@@ -10,7 +10,7 @@ library(shinyjs)
 
 ui = fluidPage(
 	theme = shinytheme("cyborg"),
-	tags$head(
+	tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "icomoon.css"),
     tags$style(HTML(".btn{padding: 2px 12px;
 font-size: 15px;}
 body{
@@ -18,7 +18,13 @@ body{
 }
 .img-circle {
     border-radius: 50%;
-}"))),
+}
+.no-underline:hover {
+    text-decoration: none;
+    opacity: 0.5;
+
+}
+"))),
 	navbarPage(
 		title = div(
 				a(
@@ -96,7 +102,19 @@ body{
          				highchartOutput("race_chart", height = "300px")
          			)
       			)
-      			)
+      			),hr(),
+      			HTML("<footer>
+
+      				<font size= '5px'>
+      				
+      				<a href='https://www.linkedin.com/in/christophvel' target='_blank' class='no-underline'><i class='icon-linkedin'></i></a>
+      				<a href='https://github.com/velaraptor' target='_blank' class='no-underline'><i class='icon-github'></i></a>
+      				</font>
+      					<br>
+      				<font size='1px'>
+      				  © 2017 Gerry's World All Rights Reserved.<br>
+                      * Disclaimer: Congressional Districts are abstract simplified polygons. They are not the exact lines that are used for the House of Representatives.</font>
+                    </footer>")
 		),
 		tabPanel("How to Play",
 				fluidRow(

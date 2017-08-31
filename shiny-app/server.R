@@ -449,7 +449,7 @@ server = function(input, output, session) {
 			ix = input$map_draw_edited_features
 			connection = connection_creds()
 			write(RJSONIO::toJSON(ix),"temp/test.json")
-			incProgress(.25, detail = paste("Almost done"))
+			incProgress(.25, detail = paste("Almost done."))
 			new_data_race = dbGetQuery(connection,
 				paste0(
 					"WITH DATA AS (SELECT '",
@@ -508,7 +508,7 @@ server = function(input, output, session) {
 					(St_area(St_intersection(b.geom_1, St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326))) / St_area(b.geom_1)) >.1)m
 					GROUP BY m.gid;"))
 			dbDisconnect(connection)
-			incProgress(.5, detail = paste("Almost done"))
+			incProgress(.5, detail = paste("Almost done.."))
 
 			g=geojsonio::geojson_read("temp/test.json",what = "sp")
 
@@ -533,7 +533,7 @@ server = function(input, output, session) {
 			  fixed_spdf$df@data[fixed_spdf$df$gid==g$gid[i],]=g@data[i,]
 			  fixed_spdf$df@polygons[fixed_spdf$df$gid==g$gid[i]]=g@polygons[i]
 			}
-			incProgress(.25, detail = paste("Almost done"))
+			incProgress(.25, detail = paste("Almost done..."))
    			popup = paste0("<h6><font color='#000000'>District Number:</font><b><font color='#2a9fd6'> ",
     			fixed_spdf$df@data$cd115fp,
     			"</h5></font></b><b><font color='#ff6750'>Republican Votes:</font></b> ",
