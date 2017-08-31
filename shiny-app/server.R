@@ -110,6 +110,9 @@ server = function(input, output, session) {
     congressional_geoms = dbGetQuery(connection,
     	"SELECT gid,cd115fp, d,r,winner,st_astext(geom) AS geom FROM simplified_congressional"
     	)
+     total_amount = dbGetQuery(connection,
+    	"SELECT SUM(d)/(SUM(r)+SUM(d)) AS d_percent, SUM(r)/(SUM(r)+SUM(d)) AS r_percent FROM president_race"
+    	)
 
     summary_stats = dbGetQuery(connection,"SELECT * FROM house_district_summ_stats")
     
@@ -124,7 +127,7 @@ server = function(input, output, session) {
 	}
     
     t = data.frame(congressional_geoms,row.names = congressional_geoms$gid)
-    congress_geom_sppdf = SpatialPolygonsDataFrame(simplified,t[-6])
+    congress_geom_sppdf = SpatialPolygonsDataFrame(p,t[-6])
     crs.geo = CRS("+proj=longlat +datum=WGS84 +ellps=WGS84")
     proj4string(congress_geom_sppdf) = crs.geo
 
