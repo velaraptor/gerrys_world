@@ -108,11 +108,9 @@ server = function(input, output, session) {
 	fixed_spdf$df <- NULL
 	connection = connection_creds()
     congressional_geoms = dbGetQuery(connection,
-    	"SELECT gid,cd115fp ,st_astext(geom) AS geom FROM tx_congress"
+    	"SELECT gid,cd115fp, d,r,winner,st_astext(geom) AS geom FROM simplified_congressional"
     	)
-    total_amount = dbGetQuery(connection,
-    	"SELECT SUM(d)/(SUM(r)+SUM(d)) AS d_percent, SUM(r)/(SUM(r)+SUM(d)) AS r_percent FROM president_race"
-    	)
+
     summary_stats = dbGetQuery(connection,"SELECT * FROM house_district_summ_stats")
     
     ##read WKT of POSTGIS query for congressional districts
@@ -125,21 +123,13 @@ server = function(input, output, session) {
 			}
 	}
     
-    ##our simplicifcation from rmapshaper library
-    simplified = ms_simplify(p,keep  = .022)
-    
     t = data.frame(congressional_geoms,row.names = congressional_geoms$gid)
-    congress_geom_sppdf = SpatialPolygonsDataFrame(simplified,t[-3])
+    congress_geom_sppdf = SpatialPolygonsDataFrame(simplified,t[-6])
     crs.geo = CRS("+proj=longlat +datum=WGS84 +ellps=WGS84")
     proj4string(congress_geom_sppdf) = crs.geo
-    
-    ##lets put the data that we already computed of the votes per congressional district 
-    district_agg = read.csv("data-1502248004410.csv")
-    names(district_agg) = c("gid","d","r")
-    ##find winner
-    district_agg$winner = ifelse(district_agg$d >= district_agg$r, "D", "R")
-    district_spdf = merge(congress_geom_sppdf,district_agg, by = "gid")
-    
+
+    district_spdf = congress_geom_sppdf
+        
     ##make district_spdf reactive, be able to edit winner, and population totals, and geoms 
 
     district_summary=read.csv("district_summary.csv")
