@@ -11,6 +11,7 @@ library(shinyjs)
 ui = fluidPage(
 	theme = shinytheme("cyborg"),
 	tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "icomoon.css"),
+    includeScript("www/google_analytics.js"),
     tags$style(
       HTML("
       .btn{

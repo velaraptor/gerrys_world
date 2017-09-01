@@ -173,7 +173,7 @@ server = function(input, output, session) {
 		addProviderTiles(
 			providers$CartoDB.DarkMatter,
 			options = providerTileOptions(minZoom = 6, maxZoom = 10),
-			group="Default") %>%
+			group = "Default") %>%
         setView(
         	lng = -99.2, 
         	lat = 31.2643298807937, 
@@ -226,11 +226,11 @@ server = function(input, output, session) {
                 color='#A8A8A8', opacity = 1, weight = 3, fillOpacity = .4,
                 bringToFront = TRUE, sendToBack = TRUE)) %>%
         addDrawToolbar(
-        	polylineOptions = FALSE,
-        	polygonOptions = FALSE,
-			circleOptions = FALSE,
-			rectangleOptions = FALSE,
-			markerOptions = FALSE,
+        	polylineOptions = F,
+        	polygonOptions = F,
+			circleOptions = F,
+			rectangleOptions = F,
+			markerOptions = F,
 			targetGroup = 'Congressional Districts',
 			editOptions = editToolbarOptions(
 				selectedPathOptions = selectedPathOptions(maintainColor=TRUE),remove=F
@@ -284,12 +284,12 @@ server = function(input, output, session) {
     	click<-input$map_shape_click
     	if(is.null(click))
             return()
-    	dist_data=fixed_spdf$df@data
-    	dist_data$total=rowSums(dist_data[,c(6:10)])
+    	dist_data = fixed_spdf$df@data
+    	dist_data$total = rowSums(dist_data[,c(6:10)])
     	dis_numbers = dist_data[dist_data$gid==click$id,]
     	ic = income_by_district[income_by_district$gid==dis_numbers$gid,]
 
-		ss=static_race_numbers[static_race_numbers$gid==dis_numbers$gid,]
+		ss = static_race_numbers[static_race_numbers$gid==dis_numbers$gid,]
 		st = static_votes_numbers[static_votes_numbers$gid==dis_numbers$gid,]
 		
 		summary = district_summary[district_summary$district==as.numeric(dis_numbers$cd115fp),2]
@@ -302,7 +302,7 @@ server = function(input, output, session) {
 				name = "Votes",
 				colorByPoint = TRUE, 
 				type = "column",
-				colors=c("#FF4C4C","#3E66F3")) %>% 
+				colors = c("#FF4C4C","#3E66F3")) %>% 
           hc_xAxis(
 				categories = 
 				c("Republican","Democrat")) %>% 
@@ -310,7 +310,7 @@ server = function(input, output, session) {
 				data=c(round(st$r),round(st$d)), 
 				name = "Actual Votes",
 				type = "column",
-				color="#c081e0")
+				color = "#c081e0")
 		})
 
 		output$districtname=renderUI({
@@ -386,8 +386,8 @@ server = function(input, output, session) {
 						fixed_spdf$df@data$asian+
 						fixed_spdf$df@data$native)
 			)
-		total$total=as.numeric(as.character(total$total))
-		total$rmse=abs(summary_stats$mean-total$total)
+		total$total = as.numeric(as.character(total$total))
+		total$rmse = abs(summary_stats$mean-total$total)
 		for(i in 1:nrow(total)){
 			if(total$rmse[i] <= summary_stats$std*3){
 				total$check[i] = "good"
@@ -419,12 +419,19 @@ server = function(input, output, session) {
 		total$total=as.numeric(as.character(total$total))
 		total$rmse=abs(summary_stats$mean-total$total)
 		sum(total$rmse)
-		})
+	})
 
 	observe({
-		output$pop = renderUI({HTML(paste("<center><h6><font color='#2a9fd6'>",population(),"</font></h6></center>"))})
-
+		output$pop = renderUI({
+			HTML(
+				paste(
+					"<center><h6><font color='#2a9fd6'>",
+					population(),
+					"</font></h6></center>"
+				)
+			)
 		})
+	})
 
 	observe({
 		ddd = as.data.frame(total_districts_by_party()$count/sum(total_districts_by_party()$count))
@@ -633,9 +640,10 @@ server = function(input, output, session) {
 				}, 
 			function(file) {
 				connection = connection_creds()
-				fixed_spdf$df$date=Sys.time()
+				datetime = Sys.time()
+				fixed_spdf$df$date = datetime
 				pgInsert(connection, name = c("public", "user_data"), data.obj = fixed_spdf$df,overwrite = F,new.id = "id")
-				scores_to_insert = as.data.frame(cbind(population_score(),leaning_score(),userDetails()$emails$value),as.character(Sys.time()))
+				scores_to_insert = as.data.frame(cbind(population_score(),leaning_score(),userDetails()$emails$value,as.character(datetime)))
 				names(scores_to_insert) = c("pop","leaning","email","date")
 				dbWriteTable(connection, c("public","scores"), value=scores_to_insert,append=TRUE, row.names=FALSE)
 				dbDisconnect(connection)
@@ -663,9 +671,10 @@ server = function(input, output, session) {
 			function(file) {
 				connection = connection_creds()
 				fixed_spdf$df$user_name = input$teamname
-				fixed_spdf$df$date=Sys.time()
+				datetime = Sys.time()
+				fixed_spdf$df$date = datetime
 				pgInsert(connection, name = c("public", "user_data"), data.obj = fixed_spdf$df,overwrite = F,new.id = "id")
-				scores_to_insert = as.data.frame(cbind(population_score(),leaning_score(),input$teamname,as.character(Sys.time())))
+				scores_to_insert = as.data.frame(cbind(population_score(),leaning_score(),input$teamname,as.character(datetime)))
 				names(scores_to_insert) = c("pop","leaning","email","date")
 				dbWriteTable(connection, c("public","scores"), value=scores_to_insert,append=TRUE, row.names=FALSE)
 				dbDisconnect(connection)
@@ -718,14 +727,14 @@ server = function(input, output, session) {
 							style = 'bootstrap',
 							options = 
 								list(
-									order=list(0,"asc"),
+									order = list(0,"asc"),
 									
                                     pageLength = 25, 
                                     autoWidth = TRUE
                                 ), 
                             class = 'hover',
                 			escape = FALSE,
-                			rownames=F,
+                			rownames = F,
                 			colnames = 
 	                			c('Rank',
 	                				'E-Mail',
