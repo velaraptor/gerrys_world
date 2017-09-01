@@ -49,6 +49,9 @@ If you haven't uploaded the most recent version of R, download [here](https://cr
 When you first open R, execute this code to correctly download all the dependent libraries. 
 ```R 
 install.packages('devtools')
+install.packages('rgeos')
+install.packages('rgdal')
+install.packages('sp')
 install.packages('leaflet')
 install.packages('DT')
 install.packages('dplyr')
@@ -60,17 +63,15 @@ install.packages('highcharter')
 install.packages('googleAuthR')
 install.packages('data.table')
 install.packages('rpostgis')
-install.packages('rgdal')
 install.packages('rmapshaper')
-install.packages('rgeos')
-install.packages('sp')
 install.packages('leaflet.extras')
 install.packages('RJSONIO')
 install.packages('geojsonio')
 install.packages('shinyjs')
 devtools::install_github("MarkEdmondson1234/googleID")
 ```
-If you need the credentials to the database, please contact me here or @ [Twitter](https://www.twitter.com/velaraptor). FYI trying to run this app without the credentials wont run the app. 
+If you need the credentials to the database, please contact me here or @ [Twitter](https://www.twitter.com/velaraptor). 
+**FYI trying to run this app without the credentials wont run the app.**
 
 Lastly within the directory of this github repo on your local machine, run this code to get an instance of the shiny app on your local machine @ http://localhost:6262.
 

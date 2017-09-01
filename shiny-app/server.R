@@ -10,8 +10,7 @@ library(leaflet.extras)
 library(RPostgreSQL)
 library(DBI)
 library(rpostgis)
-library(geojsonio)
-library(RJSONIO)
+
 
 ##data manipulation tables
 library(dplyr)
