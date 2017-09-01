@@ -502,7 +502,7 @@ server = function(input, output, session) {
 					n.native,
 					n.asian,
 					St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326) AS geom,
-					(St_area(St_intersection(b.geom, St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326))) / St_area(b.geom)) AS proportion
+					(St_area(St_intersection(b.geom, ST_MAKEVALID(St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326)))) / St_area(b.geom)) AS proportion
 					FROM tx_tracts b,
 					(SELECT Json_array_elements(fc->'features') AS feat
 					 FROM DATA) AS f,
@@ -514,9 +514,9 @@ server = function(input, output, session) {
 					hd01_vd06 AS asian
 					FROM race)n 
 					WHERE 
-					St_intersects(b.geom, St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326))
+					St_intersects(b.geom, ST_MAKEVALID(St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326)))
 					AND n.geoid2=CONCAT(b.statefp,b.countyfp,b.tractce)
-					AND (St_area(St_intersection(b.geom, St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326))) / St_area(b.geom)) >.6)m
+					AND (St_area(St_intersection(b.geom, ST_MAKEVALID(St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326)))) / St_area(b.geom)) >.6)m
 					GROUP BY m.gid;"))
 			new_votes_data = dbGetQuery(
 				connection,
@@ -531,17 +531,17 @@ server = function(input, output, session) {
 					    b.cntyvtd AS cntyvtd,
 					n.r,
 					n.d,
-					(St_area(St_intersection(b.geom_1, St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326))) / St_area(b.geom_1)) AS proportion
+					(St_area(St_intersection(b.geom_1, ST_MAKEVALID(St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326)))) / St_area(b.geom_1)) AS proportion
 					FROM voting_districts_1 b,
 					(SELECT Json_array_elements(fc->'features') AS feat
 					 FROM DATA) AS f,
 					(SELECT * FROM president_race)n
 					WHERE 
-					St_intersects(b.geom_1, St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326))
+					St_intersects(b.geom_1, ST_MAKEVALID(St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326)))
 					AND 
 					  n.cntyvtd=b.cntyvtd
 					AND 
-					(St_area(St_intersection(b.geom_1, St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326))) / St_area(b.geom_1)) >.1)m
+					(St_area(St_intersection(b.geom_1, ST_MAKEVALID(St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326)))) / St_area(b.geom_1)) >.1)m
 					GROUP BY m.gid;"))
 			dbDisconnect(connection)
 			incProgress(.5, detail = paste("Almost done.."))
