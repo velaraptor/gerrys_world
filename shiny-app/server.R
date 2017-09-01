@@ -14,6 +14,7 @@ library(rpostgis)
 ##data manipulation tables
 library(dplyr)
 library(data.table)
+library(DT)
 
 ##shiny & graphs
 library(shinythemes)
@@ -687,7 +688,7 @@ server = function(input, output, session) {
 	usr_table = dbGetQuery(connection,"SELECT RANK() OVER (ORDER BY score) AS rank,email,date,leaning,pop,score FROM(SELECT email,date,leaning,pop,leaning+(std/pop)*100 AS score FROM scores, house_district_summ_stats)m ORDER BY score DESC")
 	usr_table$date = as.POSIXct(strptime(usr_table$date, "%Y-%m-%d %H:%M:%S"))
 
-	clean_leaderboard = DT::datatable(usr_table,style = 'bootstrap',
+	clean_leaderboard = datatable(usr_table,style = 'bootstrap',
 							options = 
 								list(
 									order=list(0,"asc"),
