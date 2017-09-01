@@ -36,3 +36,7 @@ db_files/test.json
 rdata/map_file.RData
 
 shiny-app/postgres_creds.R
+shiny-app/www/.DS_Store
+.DS_Store
+colorout/
+shiny-app/ix.RData

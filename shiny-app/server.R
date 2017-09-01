@@ -6,14 +6,16 @@ library(rmapshaper)
 library(leaflet)
 library(leaflet.extras)
 
-##database
+##database & json libs
 library(RPostgreSQL)
 library(DBI)
 library(rpostgis)
 
+
 ##data manipulation tables
 library(dplyr)
 library(data.table)
+library(DT)
 
 ##shiny & graphs
 library(shinythemes)
@@ -28,11 +30,13 @@ source("postgres_creds.R")
 
 
 server = function(input, output, session) {
+	##authentication events
 	rv = reactiveValues(
         login = FALSE
     )
 
 	access_token = callModule(googleAuth, "loginButton")
+	##our reactive spdf polygon initiated 
 	fixed_spdf = reactiveValues()
 	userDetails = reactive({
         validate(
@@ -105,6 +109,7 @@ server = function(input, output, session) {
         
     })
 
+    ## code beginning getting district polygons from db 
 	fixed_spdf$df <- NULL
 	connection = connection_creds()
     congressional_geoms = dbGetQuery(connection,
@@ -168,7 +173,7 @@ server = function(input, output, session) {
 		addProviderTiles(
 			providers$CartoDB.DarkMatter,
 			options = providerTileOptions(minZoom = 6, maxZoom = 10),
-			group="Default") %>%
+			group = "Default") %>%
         setView(
         	lng = -99.2, 
         	lat = 31.2643298807937, 
@@ -221,11 +226,11 @@ server = function(input, output, session) {
                 color='#A8A8A8', opacity = 1, weight = 3, fillOpacity = .4,
                 bringToFront = TRUE, sendToBack = TRUE)) %>%
         addDrawToolbar(
-        	polylineOptions = FALSE,
-        	polygonOptions = FALSE,
-			circleOptions = FALSE,
-			rectangleOptions = FALSE,
-			markerOptions = FALSE,
+        	polylineOptions = F,
+        	polygonOptions = F,
+			circleOptions = F,
+			rectangleOptions = F,
+			markerOptions = F,
 			targetGroup = 'Congressional Districts',
 			editOptions = editToolbarOptions(
 				selectedPathOptions = selectedPathOptions(maintainColor=TRUE),remove=F
@@ -258,6 +263,7 @@ server = function(input, output, session) {
       
     })
     
+    ##probably the only thing that stays static
     output$pres_pie = renderHighchart({
     	highchart() %>% 
       	hc_add_series_labels_values(
@@ -273,16 +279,17 @@ server = function(input, output, session) {
 			style = list(color="#ffffff",fontSize='10px'))
     })
 
+    ##event from click feature to show graphs and text from district
     observe({
     	click<-input$map_shape_click
     	if(is.null(click))
             return()
-    	dist_data=fixed_spdf$df@data
-    	dist_data$total=rowSums(dist_data[,c(6:10)])
+    	dist_data = fixed_spdf$df@data
+    	dist_data$total = rowSums(dist_data[,c(6:10)])
     	dis_numbers = dist_data[dist_data$gid==click$id,]
     	ic = income_by_district[income_by_district$gid==dis_numbers$gid,]
 
-		ss=static_race_numbers[static_race_numbers$gid==dis_numbers$gid,]
+		ss = static_race_numbers[static_race_numbers$gid==dis_numbers$gid,]
 		st = static_votes_numbers[static_votes_numbers$gid==dis_numbers$gid,]
 		
 		summary = district_summary[district_summary$district==as.numeric(dis_numbers$cd115fp),2]
@@ -295,7 +302,7 @@ server = function(input, output, session) {
 				name = "Votes",
 				colorByPoint = TRUE, 
 				type = "column",
-				colors=c("#FF4C4C","#3E66F3")) %>% 
+				colors = c("#FF4C4C","#3E66F3")) %>% 
           hc_xAxis(
 				categories = 
 				c("Republican","Democrat")) %>% 
@@ -303,7 +310,7 @@ server = function(input, output, session) {
 				data=c(round(st$r),round(st$d)), 
 				name = "Actual Votes",
 				type = "column",
-				color="#c081e0")
+				color = "#c081e0")
 		})
 
 		output$districtname=renderUI({
@@ -379,8 +386,8 @@ server = function(input, output, session) {
 						fixed_spdf$df@data$asian+
 						fixed_spdf$df@data$native)
 			)
-		total$total=as.numeric(as.character(total$total))
-		total$rmse=abs(summary_stats$mean-total$total)
+		total$total = as.numeric(as.character(total$total))
+		total$rmse = abs(summary_stats$mean-total$total)
 		for(i in 1:nrow(total)){
 			if(total$rmse[i] <= summary_stats$std*3){
 				total$check[i] = "good"
@@ -399,10 +406,32 @@ server = function(input, output, session) {
 		
 	})
 
-	observe({
-		output$pop = renderUI({HTML(paste("<center><h6><font color='#2a9fd6'>",population(),"</font></h6></center>"))})
+	population_score = reactive({
+				total = as.data.frame(
+			cbind(
+				cd115fp=fixed_spdf$df@data$cd115fp,
+				total=fixed_spdf$df@data$hispanic+
+						fixed_spdf$df@data$white+
+						fixed_spdf$df@data$black+
+						fixed_spdf$df@data$asian+
+						fixed_spdf$df@data$native)
+			)
+		total$total=as.numeric(as.character(total$total))
+		total$rmse=abs(summary_stats$mean-total$total)
+		sum(total$rmse)
+	})
 
+	observe({
+		output$pop = renderUI({
+			HTML(
+				paste(
+					"<center><h6><font color='#2a9fd6'>",
+					population(),
+					"</font></h6></center>"
+				)
+			)
 		})
+	})
 
 	observe({
 		ddd = as.data.frame(total_districts_by_party()$count/sum(total_districts_by_party()$count))
@@ -428,6 +457,12 @@ server = function(input, output, session) {
 		}
 		})
 
+	leaning_score = reactive({
+		ddd = as.data.frame(total_districts_by_party()$count/sum(total_districts_by_party()$count))
+		leaning = ddd[2,]-total_amount$r_percent
+		leaning
+		})
+
 	 output$rep_pie = renderHighchart({
 		highchart() %>% 
 		hc_add_series_labels_values(
@@ -443,6 +478,7 @@ server = function(input, output, session) {
       	style = list(color="#ffffff",fontSize='10px'))
     })
 
+	##the good ole edited map features event 
 	observeEvent(input$map_draw_edited_features,{
 		withProgress(message = 'Getting Population Numbers', value = 0, {
 		if(typeof(input$map_draw_edited_features)=="list"){
@@ -466,7 +502,7 @@ server = function(input, output, session) {
 					n.native,
 					n.asian,
 					St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326) AS geom,
-					(St_area(St_intersection(b.geom, St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326))) / St_area(b.geom)) AS proportion
+					(St_area(St_intersection(b.geom, ST_MAKEVALID(St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326)))) / St_area(b.geom)) AS proportion
 					FROM tx_tracts b,
 					(SELECT Json_array_elements(fc->'features') AS feat
 					 FROM DATA) AS f,
@@ -478,9 +514,9 @@ server = function(input, output, session) {
 					hd01_vd06 AS asian
 					FROM race)n 
 					WHERE 
-					St_intersects(b.geom, St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326))
+					St_intersects(b.geom, ST_MAKEVALID(St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326)))
 					AND n.geoid2=CONCAT(b.statefp,b.countyfp,b.tractce)
-					AND (St_area(St_intersection(b.geom, St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326))) / St_area(b.geom)) >.6)m
+					AND (St_area(St_intersection(b.geom, ST_MAKEVALID(St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326)))) / St_area(b.geom)) >.6)m
 					GROUP BY m.gid;"))
 			new_votes_data = dbGetQuery(
 				connection,
@@ -495,43 +531,39 @@ server = function(input, output, session) {
 					    b.cntyvtd AS cntyvtd,
 					n.r,
 					n.d,
-					(St_area(St_intersection(b.geom_1, St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326))) / St_area(b.geom_1)) AS proportion
+					(St_area(St_intersection(b.geom_1, ST_MAKEVALID(St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326)))) / St_area(b.geom_1)) AS proportion
 					FROM voting_districts_1 b,
 					(SELECT Json_array_elements(fc->'features') AS feat
 					 FROM DATA) AS f,
 					(SELECT * FROM president_race)n
 					WHERE 
-					St_intersects(b.geom_1, St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326))
+					St_intersects(b.geom_1, ST_MAKEVALID(St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326)))
 					AND 
 					  n.cntyvtd=b.cntyvtd
 					AND 
-					(St_area(St_intersection(b.geom_1, St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326))) / St_area(b.geom_1)) >.1)m
+					(St_area(St_intersection(b.geom_1, ST_MAKEVALID(St_setsrid(St_geomfromgeojson(feat->>'geometry'),4326)))) / St_area(b.geom_1)) >.1)m
 					GROUP BY m.gid;"))
 			dbDisconnect(connection)
 			incProgress(.5, detail = paste("Almost done.."))
 
-			g=geojsonio::geojson_read("temp/test.json",what = "sp")
+			g = geojsonio::geojson_read("temp/test.json",what = "sp")
 
-			g=merge(g,new_votes_data,by.x="layerId",by.y="gid")
+			g = merge(g,new_votes_data,by.x="layerId",by.y="gid")
 
 			g$winner = ifelse(g$d >= g$r, "D", "R")
 
 			for(i in 1:nrow(g)){
-			  g$cd115fp[i]=fixed_spdf$df@data[fixed_spdf$df$gid==g$layerId[i],2]
+			  g$cd115fp[i] = fixed_spdf$df@data[fixed_spdf$df$gid == g$layerId[i],2]
 			}
 
-
-			names(g)[1]="gid"
-			g=merge(g,new_data_race,by="gid")
-			g=g[,-2]
-			g=g[c(1,5,2,3,4,6:10)]
-
-
-
+			names(g)[1] = "gid"
+			g = merge(g,new_data_race,by="gid")
+			g = g[,-2]
+			g = g[c(1,5,2,3,4,6:10)]
 
 			for(i in 1:nrow(g)){
-			  fixed_spdf$df@data[fixed_spdf$df$gid==g$gid[i],]=g@data[i,]
-			  fixed_spdf$df@polygons[fixed_spdf$df$gid==g$gid[i]]=g@polygons[i]
+			  fixed_spdf$df@data[fixed_spdf$df$gid == g$gid[i],] = g@data[i,]
+			  fixed_spdf$df@polygons[fixed_spdf$df$gid == g$gid[i]] = g@polygons[i]
 			}
 			incProgress(.25, detail = paste("Almost done..."))
    			popup = paste0("<h6><font color='#000000'>District Number:</font><b><font color='#2a9fd6'> ",
@@ -550,13 +582,13 @@ server = function(input, output, session) {
 					),
 					big.mark=",")
 			)
-			    observe({
-    	  validate(
-            need(userDetails(), HTML(""))
-        )
-    	fixed_spdf$df$user_name = userDetails()$emails$value
+			observe({
+    	  		validate(
+            		need(userDetails(), HTML(""))
+        		)
+    			fixed_spdf$df$user_name = userDetails()$emails$value
 
-    	})
+    		})
 
 			##need to fix coordinates and popup 
 			leafletProxy("map") %>% 
@@ -580,7 +612,7 @@ server = function(input, output, session) {
 			
 
 		}
-	})
+		}) ##with progress ender 
 	})
 
 	
@@ -593,6 +625,7 @@ server = function(input, output, session) {
 		)
 	})
 
+	##let's download the data for the user and insert it into our database
 	observe({
 	if(rv$login){
 			output$btnSave <- downloadHandler(
@@ -607,7 +640,12 @@ server = function(input, output, session) {
 				}, 
 			function(file) {
 				connection = connection_creds()
+				datetime = Sys.time()
+				fixed_spdf$df$date = datetime
 				pgInsert(connection, name = c("public", "user_data"), data.obj = fixed_spdf$df,overwrite = F,new.id = "id")
+				scores_to_insert = as.data.frame(cbind(population_score(),leaning_score(),userDetails()$emails$value,as.character(datetime)))
+				names(scores_to_insert) = c("pop","leaning","email","date")
+				dbWriteTable(connection, c("public","scores"), value=scores_to_insert,append=TRUE, row.names=FALSE)
 				dbDisconnect(connection)
 				shp = writeRasterZip(
 						fixed_spdf$df, 
@@ -633,7 +671,12 @@ server = function(input, output, session) {
 			function(file) {
 				connection = connection_creds()
 				fixed_spdf$df$user_name = input$teamname
+				datetime = Sys.time()
+				fixed_spdf$df$date = datetime
 				pgInsert(connection, name = c("public", "user_data"), data.obj = fixed_spdf$df,overwrite = F,new.id = "id")
+				scores_to_insert = as.data.frame(cbind(population_score(),leaning_score(),input$teamname,as.character(datetime)))
+				names(scores_to_insert) = c("pop","leaning","email","date")
+				dbWriteTable(connection, c("public","scores"), value=scores_to_insert,append=TRUE, row.names=FALSE)
 				dbDisconnect(connection)
 				shp = writeRasterZip(
 						fixed_spdf$df, 
@@ -647,6 +690,7 @@ server = function(input, output, session) {
 		}
 	})
 
+	##sign out page to redirect
 	observe({
     	if (rv$login) {
         	shinyjs::onclick("loginButton-googleAuthUi",
@@ -654,5 +698,58 @@ server = function(input, output, session) {
     	}
 	})
 
+	##leaderboards FTW 
+	connection = connection_creds()
+	usr_table = dbGetQuery(connection,"
+		SELECT 
+			RANK() OVER (ORDER BY score) AS rank,
+			email,
+			date,
+			leaning,
+			pop,
+			score 
+		FROM
+			(SELECT 
+				email,
+				date,
+				leaning,
+				pop,
+				leaning+(std/pop)*100 AS score 
+			FROM 
+				scores, 
+				house_district_summ_stats
+			)m 
+		ORDER BY score DESC")
+
+	usr_table$date = as.POSIXct(strptime(usr_table$date, "%Y-%m-%d %H:%M:%S"))
+
+	clean_leaderboard = datatable(usr_table,
+							style = 'bootstrap',
+							options = 
+								list(
+									order = list(0,"asc"),
+									
+                                    pageLength = 25, 
+                                    autoWidth = TRUE
+                                ), 
+                            class = 'hover',
+                			escape = FALSE,
+                			rownames = F,
+                			colnames = 
+	                			c('Rank',
+	                				'E-Mail',
+	                			 'Submission Date', 
+	                			 'Political Score', 
+	                			 'Population Equality Score', 
+	                			 'Overall Score')
+                		) %>% 
+						formatPercentage('leaning', 2) %>% 
+						formatRound('score', 3) %>%
+						formatRound('pop', 0) %>% 
+						formatDate('date', 'toLocaleString') %>% 
+                 		formatStyle("email",fontWeight="bold")
+
+	output$tbl = DT::renderDataTable(clean_leaderboard)
+	dbDisconnect(connection)
 
 }

@@ -30,14 +30,14 @@ Currently the app is being hosted @ https://velaraptor.shinyapps.io/gerrys_world
 The app has a native Google Auth login. This a production server so it will not being running as quickly, Currently you can edit the congressional districts and save a shapefile of your edited districts and a copy will be written to the database. 
 
 * The next steps are to migrate this app to either an AWS server or a paid Shinyapp.io server to handle more users & better authentication.
-* Add a live leaderboard from submitted user districts. 
+* ~~Add a live leaderboard from submitted user districts.~~
 * Create a how to play video to allow users to better understand how to play. 
 * Add Income Dot Map Tile
 * Make Login page live. 
 * ~~Save simplified congressional districts to database, to unburden load on app making polygons simplified.~~ 
 * Fix potential error with native population numbers. 
 * QA Test the shit out of it. 
-* Coastal Districts don't have valid geoms, ST_MAKEVALID()
+* ~~Coastal Districts don't have valid geoms, ST_MAKEVALID()~~
 
 ## Development
 To start this Shiny App on your local computer, first make sure you have gdal installed.
@@ -49,7 +49,11 @@ If you haven't uploaded the most recent version of R, download [here](https://cr
 When you first open R, execute this code to correctly download all the dependent libraries. 
 ```R 
 install.packages('devtools')
+install.packages('rgeos')
+install.packages('rgdal')
+install.packages('sp')
 install.packages('leaflet')
+install.packages('DT')
 install.packages('dplyr')
 install.packages('RPostgreSQL')
 install.packages('DBI')
@@ -59,17 +63,15 @@ install.packages('highcharter')
 install.packages('googleAuthR')
 install.packages('data.table')
 install.packages('rpostgis')
-install.packages('rgdal')
 install.packages('rmapshaper')
-install.packages('rgeos')
-install.packages('sp')
 install.packages('leaflet.extras')
 install.packages('RJSONIO')
 install.packages('geojsonio')
 install.packages('shinyjs')
 devtools::install_github("MarkEdmondson1234/googleID")
 ```
-If you need the credentials to the database, please contact me here or @ [Twitter](https://www.twitter.com/velaraptor). FYI trying to run this app without the credentials wont run the app. 
+If you need the credentials to the database, please contact me here or @ [Twitter](https://www.twitter.com/velaraptor). 
+**FYI trying to run this app without the credentials wont run the app.**
 
 Lastly within the directory of this github repo on your local machine, run this code to get an instance of the shiny app on your local machine @ http://localhost:6262.
 
