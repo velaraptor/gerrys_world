@@ -654,5 +654,9 @@ server = function(input, output, session) {
     	}
 	})
 
+	connection = connection_creds()
+	usr_table=dbGetQuery(connection,"SELECT user_name,trunc(random() * 9 + 1) AS score FROM user_data GROUP BY user_name")
+	output$tbl = DT::renderDataTable(usr_table)
+	dbDisconnect(connection)
 
 }

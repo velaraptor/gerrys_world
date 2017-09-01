@@ -106,7 +106,7 @@ body{
       			HTML("<footer>
 
       				<font size= '5px'>
-      				
+
       				<a href='https://www.linkedin.com/in/christophvel' target='_blank' class='no-underline'><i class='icon-linkedin'></i></a>
       				<a href='https://github.com/velaraptor' target='_blank' class='no-underline'><i class='icon-github'></i></a>
       				</font>
@@ -131,7 +131,7 @@ body{
 				p(
 					"Click the edit button to edit the congressional districts to ungerrymander or gerrymander the citizens of Texas.")
 				),
-		tabPanel("Leaderboard")
+		tabPanel("Leaderboard",DT::dataTableOutput('tbl'))
 
 	)
 )
