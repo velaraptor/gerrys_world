@@ -6,10 +6,12 @@ library(rmapshaper)
 library(leaflet)
 library(leaflet.extras)
 
-##database
+##database & json libs
 library(RPostgreSQL)
 library(DBI)
 library(rpostgis)
+library(geojsonio)
+library(RJSONIO)
 
 ##data manipulation tables
 library(dplyr)
@@ -29,11 +31,13 @@ source("postgres_creds.R")
 
 
 server = function(input, output, session) {
+	##authentication events
 	rv = reactiveValues(
         login = FALSE
     )
 
 	access_token = callModule(googleAuth, "loginButton")
+	##our reactive spdf polygon initiated 
 	fixed_spdf = reactiveValues()
 	userDetails = reactive({
         validate(
@@ -106,6 +110,7 @@ server = function(input, output, session) {
         
     })
 
+    ## code beginning getting district polygons from db 
 	fixed_spdf$df <- NULL
 	connection = connection_creds()
     congressional_geoms = dbGetQuery(connection,
@@ -259,6 +264,7 @@ server = function(input, output, session) {
       
     })
     
+    ##probably the only thing that stays static
     output$pres_pie = renderHighchart({
     	highchart() %>% 
       	hc_add_series_labels_values(
@@ -274,6 +280,7 @@ server = function(input, output, session) {
 			style = list(color="#ffffff",fontSize='10px'))
     })
 
+    ##event from click feature to show graphs and text from district
     observe({
     	click<-input$map_shape_click
     	if(is.null(click))
@@ -465,6 +472,7 @@ server = function(input, output, session) {
       	style = list(color="#ffffff",fontSize='10px'))
     })
 
+	##the good ole edited map features event 
 	observeEvent(input$map_draw_edited_features,{
 		withProgress(message = 'Getting Population Numbers', value = 0, {
 		if(typeof(input$map_draw_edited_features)=="list"){
@@ -532,28 +540,24 @@ server = function(input, output, session) {
 			dbDisconnect(connection)
 			incProgress(.5, detail = paste("Almost done.."))
 
-			g=geojsonio::geojson_read("temp/test.json",what = "sp")
+			g = geojsonio::geojson_read("temp/test.json",what = "sp")
 
-			g=merge(g,new_votes_data,by.x="layerId",by.y="gid")
+			g = merge(g,new_votes_data,by.x="layerId",by.y="gid")
 
 			g$winner = ifelse(g$d >= g$r, "D", "R")
 
 			for(i in 1:nrow(g)){
-			  g$cd115fp[i]=fixed_spdf$df@data[fixed_spdf$df$gid==g$layerId[i],2]
+			  g$cd115fp[i] = fixed_spdf$df@data[fixed_spdf$df$gid == g$layerId[i],2]
 			}
 
-
-			names(g)[1]="gid"
-			g=merge(g,new_data_race,by="gid")
-			g=g[,-2]
-			g=g[c(1,5,2,3,4,6:10)]
-
-
-
+			names(g)[1] = "gid"
+			g = merge(g,new_data_race,by="gid")
+			g = g[,-2]
+			g = g[c(1,5,2,3,4,6:10)]
 
 			for(i in 1:nrow(g)){
-			  fixed_spdf$df@data[fixed_spdf$df$gid==g$gid[i],]=g@data[i,]
-			  fixed_spdf$df@polygons[fixed_spdf$df$gid==g$gid[i]]=g@polygons[i]
+			  fixed_spdf$df@data[fixed_spdf$df$gid == g$gid[i],] = g@data[i,]
+			  fixed_spdf$df@polygons[fixed_spdf$df$gid == g$gid[i]] = g@polygons[i]
 			}
 			incProgress(.25, detail = paste("Almost done..."))
    			popup = paste0("<h6><font color='#000000'>District Number:</font><b><font color='#2a9fd6'> ",
@@ -572,13 +576,13 @@ server = function(input, output, session) {
 					),
 					big.mark=",")
 			)
-			    observe({
-    	  validate(
-            need(userDetails(), HTML(""))
-        )
-    	fixed_spdf$df$user_name = userDetails()$emails$value
+			observe({
+    	  		validate(
+            		need(userDetails(), HTML(""))
+        		)
+    			fixed_spdf$df$user_name = userDetails()$emails$value
 
-    	})
+    		})
 
 			##need to fix coordinates and popup 
 			leafletProxy("map") %>% 
@@ -602,7 +606,7 @@ server = function(input, output, session) {
 			
 
 		}
-	})
+		}) ##with progress ender 
 	})
 
 	
@@ -615,6 +619,7 @@ server = function(input, output, session) {
 		)
 	})
 
+	##let's download the data for the user and insert it into our database
 	observe({
 	if(rv$login){
 			output$btnSave <- downloadHandler(
@@ -677,6 +682,7 @@ server = function(input, output, session) {
 		}
 	})
 
+	##sign out page to redirect
 	observe({
     	if (rv$login) {
         	shinyjs::onclick("loginButton-googleAuthUi",
@@ -684,11 +690,33 @@ server = function(input, output, session) {
     	}
 	})
 
+	##leaderboards FTW 
 	connection = connection_creds()
-	usr_table = dbGetQuery(connection,"SELECT RANK() OVER (ORDER BY score) AS rank,email,date,leaning,pop,score FROM(SELECT email,date,leaning,pop,leaning+(std/pop)*100 AS score FROM scores, house_district_summ_stats)m ORDER BY score DESC")
+	usr_table = dbGetQuery(connection,"
+		SELECT 
+			RANK() OVER (ORDER BY score) AS rank,
+			email,
+			date,
+			leaning,
+			pop,
+			score 
+		FROM
+			(SELECT 
+				email,
+				date,
+				leaning,
+				pop,
+				leaning+(std/pop)*100 AS score 
+			FROM 
+				scores, 
+				house_district_summ_stats
+			)m 
+		ORDER BY score DESC")
+
 	usr_table$date = as.POSIXct(strptime(usr_table$date, "%Y-%m-%d %H:%M:%S"))
 
-	clean_leaderboard = datatable(usr_table,style = 'bootstrap',
+	clean_leaderboard = datatable(usr_table,
+							style = 'bootstrap',
 							options = 
 								list(
 									order=list(0,"asc"),
@@ -700,12 +728,12 @@ server = function(input, output, session) {
                 			escape = FALSE,
                 			rownames=F,
                 			colnames = 
-                			c('Rank',
-                				'E-Mail',
-                			 'Submission Date', 
-                			 'Political Score', 
-                			 'Population Equality Score', 
-                			 'Overall Score')
+	                			c('Rank',
+	                				'E-Mail',
+	                			 'Submission Date', 
+	                			 'Political Score', 
+	                			 'Population Equality Score', 
+	                			 'Overall Score')
                 		) %>% 
 						formatPercentage('leaning', 2) %>% 
 						formatRound('score', 3) %>%
