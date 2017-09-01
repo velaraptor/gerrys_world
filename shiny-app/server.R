@@ -399,6 +399,21 @@ server = function(input, output, session) {
 		
 	})
 
+	population_score = reactive({
+				total = as.data.frame(
+			cbind(
+				cd115fp=fixed_spdf$df@data$cd115fp,
+				total=fixed_spdf$df@data$hispanic+
+						fixed_spdf$df@data$white+
+						fixed_spdf$df@data$black+
+						fixed_spdf$df@data$asian+
+						fixed_spdf$df@data$native)
+			)
+		total$total=as.numeric(as.character(total$total))
+		total$rmse=abs(summary_stats$mean-total$total)
+		sum(total$rmse)
+		})
+
 	observe({
 		output$pop = renderUI({HTML(paste("<center><h6><font color='#2a9fd6'>",population(),"</font></h6></center>"))})
 
@@ -426,6 +441,12 @@ server = function(input, output, session) {
 		}else if(leaning<(-.3)){
 			output$score=renderUI({HTML(paste("<center>",h6("Are you trying to eliminate Republican Representation?"),"</center>"))})
 		}
+		})
+
+	leaning_score = reactive({
+		ddd = as.data.frame(total_districts_by_party()$count/sum(total_districts_by_party()$count))
+		leaning = ddd[2,]-total_amount$r_percent
+		leaning
 		})
 
 	 output$rep_pie = renderHighchart({
@@ -607,7 +628,11 @@ server = function(input, output, session) {
 				}, 
 			function(file) {
 				connection = connection_creds()
+				fixed_spdf$df$date=Sys.time()
 				pgInsert(connection, name = c("public", "user_data"), data.obj = fixed_spdf$df,overwrite = F,new.id = "id")
+				scores_to_insert = as.data.frame(cbind(population_score(),leaning_score(),userDetails()$emails$value),as.character(Sys.time()))
+				names(scores_to_insert) = c("pop","leaning","email","date")
+				dbWriteTable(connection, c("public","scores"), value=scores_to_insert,append=TRUE, row.names=FALSE)
 				dbDisconnect(connection)
 				shp = writeRasterZip(
 						fixed_spdf$df, 
@@ -633,7 +658,11 @@ server = function(input, output, session) {
 			function(file) {
 				connection = connection_creds()
 				fixed_spdf$df$user_name = input$teamname
+				fixed_spdf$df$date=Sys.time()
 				pgInsert(connection, name = c("public", "user_data"), data.obj = fixed_spdf$df,overwrite = F,new.id = "id")
+				scores_to_insert = as.data.frame(cbind(population_score(),leaning_score(),input$teamname,as.character(Sys.time())))
+				names(scores_to_insert) = c("pop","leaning","email","date")
+				dbWriteTable(connection, c("public","scores"), value=scores_to_insert,append=TRUE, row.names=FALSE)
 				dbDisconnect(connection)
 				shp = writeRasterZip(
 						fixed_spdf$df, 
@@ -655,8 +684,35 @@ server = function(input, output, session) {
 	})
 
 	connection = connection_creds()
-	usr_table=dbGetQuery(connection,"SELECT user_name,trunc(random() * 9 + 1) AS score FROM user_data GROUP BY user_name")
-	output$tbl = DT::renderDataTable(usr_table)
+	usr_table = dbGetQuery(connection,"SELECT RANK() OVER (ORDER BY score) AS rank,email,date,leaning,pop,score FROM(SELECT email,date,leaning,pop,leaning+(std/pop)*100 AS score FROM scores, house_district_summ_stats)m ORDER BY score DESC")
+	usr_table$date = as.POSIXct(strptime(usr_table$date, "%Y-%m-%d %H:%M:%S"))
+
+	clean_leaderboard = datatable(usr_table,style = 'bootstrap',
+							options = 
+								list(
+									order=list(0,"asc"),
+									
+                                    pageLength = 25, 
+                                    autoWidth = TRUE
+                                ), 
+                            class = 'hover',
+                			escape = FALSE,
+                			rownames=F,
+                			colnames = 
+                			c('Rank',
+                				'E-Mail',
+                			 'Submission Date', 
+                			 'Political Score', 
+                			 'Population Equality Score', 
+                			 'Overall Score')
+                		) %>% 
+						formatPercentage('leaning', 2) %>% 
+						formatRound('score', 3) %>%
+						formatRound('pop', 0) %>% 
+						formatDate('date', 'toLocaleString') %>% 
+                 		formatStyle("email",fontWeight="bold")
+
+	output$tbl = DT::renderDataTable(clean_leaderboard)
 	dbDisconnect(connection)
 
 }

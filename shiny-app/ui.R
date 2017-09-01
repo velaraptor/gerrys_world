@@ -129,9 +129,35 @@ body{
 					"The goal of the game is to make districts that are closely equal to the results of the 2016 Presidential Election."
 				),
 				p(
-					"Click the edit button to edit the congressional districts to ungerrymander or gerrymander the citizens of Texas.")
+					"Click the edit button to edit the congressional districts to ungerrymander or gerrymander the citizens of Texas."),
+				p("Our hope is that we can not only teach people how gerrymandering works at a state level, but potentially allow users to crowd source the lines to help legislators and the courts get a better idea of what the citizens of Texas believe are just and fair district lines."),
+				hr(),
+      			HTML("<footer>
+
+      				<font size= '5px'>
+
+      				<a href='https://www.linkedin.com/in/christophvel' target='_blank' class='no-underline'><i class='icon-linkedin'></i></a>
+      				<a href='https://github.com/velaraptor' target='_blank' class='no-underline'><i class='icon-github'></i></a>
+      				</font>
+      					<br>
+      				<font size='1px'>
+      				  © 2017 Gerry's World All Rights Reserved.<br>
+                      * Disclaimer: Congressional Districts are abstract simplified polygons. They are not the exact lines that are used for the House of Representatives.</font>
+                    </footer>")
 				),
-		tabPanel("Leaderboard",DT::dataTableOutput('tbl'))
+		tabPanel("Leaderboard",DT::dataTableOutput('tbl'),hr(),
+      			HTML("<footer>
+
+      				<font size= '5px'>
+
+      				<a href='https://www.linkedin.com/in/christophvel' target='_blank' class='no-underline'><i class='icon-linkedin'></i></a>
+      				<a href='https://github.com/velaraptor' target='_blank' class='no-underline'><i class='icon-github'></i></a>
+      				</font>
+      					<br>
+      				<font size='1px'>
+      				  © 2017 Gerry's World All Rights Reserved.<br>
+                      * Disclaimer: Congressional Districts are abstract simplified polygons. They are not the exact lines that are used for the House of Representatives.</font>
+                    </footer>"))
 
 	)
 )
