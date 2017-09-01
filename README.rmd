@@ -30,7 +30,7 @@ Currently the app is being hosted @ https://velaraptor.shinyapps.io/gerrys_world
 The app has a native Google Auth login. This a production server so it will not being running as quickly, Currently you can edit the congressional districts and save a shapefile of your edited districts and a copy will be written to the database. 
 
 * The next steps are to migrate this app to either an AWS server or a paid Shinyapp.io server to handle more users & better authentication.
-* Add a live leaderboard from submitted user districts. 
+* ~~Add a live leaderboard from submitted user districts.~~
 * Create a how to play video to allow users to better understand how to play. 
 * Add Income Dot Map Tile
 * Make Login page live. 
@@ -50,6 +50,7 @@ When you first open R, execute this code to correctly download all the dependent
 ```R 
 install.packages('devtools')
 install.packages('leaflet')
+install.packages('DT')
 install.packages('dplyr')
 install.packages('RPostgreSQL')
 install.packages('DBI')
