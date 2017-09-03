@@ -714,7 +714,7 @@ server = function(input, output, session) {
 				date,
 				leaning,
 				pop,
-				leaning+(std/pop)*100 AS score 
+				((leaning*5)+(pop/std)/100) AS score
 			FROM 
 				scores, 
 				house_district_summ_stats

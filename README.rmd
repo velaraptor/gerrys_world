@@ -48,26 +48,7 @@ If you haven't uploaded the most recent version of R, download [here](https://cr
 
 When you first open R, execute this code to correctly download all the dependent libraries. 
 ```R 
-install.packages('devtools')
-install.packages('rgeos')
-install.packages('rgdal')
-install.packages('sp')
-install.packages('leaflet')
-install.packages('DT')
-install.packages('dplyr')
-install.packages('RPostgreSQL')
-install.packages('DBI')
-install.packages('shinythemes')
-install.packages('shiny')
-install.packages('highcharter')
-install.packages('googleAuthR')
-install.packages('data.table')
-install.packages('rpostgis')
-install.packages('rmapshaper')
-install.packages('leaflet.extras')
-install.packages('RJSONIO')
-install.packages('geojsonio')
-install.packages('shinyjs')
+install.packages(c('devtools','rgeos','rgdal','sp','leaflet','DT','dplyr','RPostgreSQL','DBI','shinythemes','shiny','highcharter','googleAuthR','data.table','rpostgis','rmapshaper','leaflet.extras','RJSONIO','geojsonio','shinyjs'),dependencies=T)
 devtools::install_github("MarkEdmondson1234/googleID")
 ```
 If you need the credentials to the database, please contact me here or @ [Twitter](https://www.twitter.com/velaraptor). 
