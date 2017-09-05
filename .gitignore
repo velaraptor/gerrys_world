@@ -40,3 +40,6 @@ shiny-app/www/.DS_Store
 .DS_Store
 colorout/
 shiny-app/ix.RData
+*.sublime-workspace
+gerrys_world.sublime-project
+shiny-app/rsconnect/shinyapps.io/christophvel/gerrys_world.dcf

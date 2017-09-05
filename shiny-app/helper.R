@@ -1,15 +1,6 @@
 library(rgdal)    
 library(sp)   
 library(rgeos)
-library(shiny)
-library(leaflet)
-library(RPostgreSQL)
-library(DBI)
-library(leaflet.extras)
-library(dplyr)
-library(data.table)
-library(rmapshaper)
-library(shinythemes)
 library(highcharter)
 
 ##highcharter tooltip percentage
