@@ -22,7 +22,7 @@ The data used in the backend on our Postgres Database includes:
 	* Income
 	* Race
 	* Total Population
-* [2016 Presidential Results](ftp://ftpgis1.tlc.state.tx.us/elections)
+* 2016 Presidential Results - (ftp://ftpgis1.tlc.state.tx.us/elections)
 * Shapefiles for Congressional Districts, Voting Districts, and Census Tracts
 
 ## Roadmap
