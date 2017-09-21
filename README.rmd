@@ -39,7 +39,7 @@ The app has a native Google Auth login. This a production server so it will not 
 * Fix potential error with native population numbers. 
 * QA Test the shit out of it. 
 * ~~Coastal Districts don't have valid geoms, ST_MAKEVALID()~~
-* Add Race Commponent Score
+* Add Race Component Score
 
 ## Development
 To start this Shiny App on your local computer, first make sure you have gdal installed.
