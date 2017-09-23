@@ -179,31 +179,31 @@ server = function(input, output, session) {
         	lat = 31.2643298807937, 
         	zoom = 6) %>% 
         addTiles(
-        	urlTemplate = "http://safeatx.com/map_tiles/race/{z}/{x}/{y}.png",
+        	urlTemplate = "http://ec2-54-70-212-61.us-west-2.compute.amazonaws.com//map_tiles/race/{z}/{x}/{y}.png",
         	group = "Hispanic",
         	options = providerTileOptions(minZoom = 6, maxZoom = 10)) %>% 
         addTiles(
-        	urlTemplate = "http://safeatx.com/map_tiles/white/{z}/{x}/{y}.png",
+        	urlTemplate = "http://ec2-54-70-212-61.us-west-2.compute.amazonaws.com//map_tiles/white/{z}/{x}/{y}.png",
         	group = "White",
         	options = providerTileOptions(minZoom = 6, maxZoom = 10)) %>%
         addTiles(
-        	urlTemplate="http://safeatx.com/map_tiles/black/{z}/{x}/{y}.png",
+        	urlTemplate="http://ec2-54-70-212-61.us-west-2.compute.amazonaws.com//map_tiles/black/{z}/{x}/{y}.png",
         	group = "Black",
         	options = providerTileOptions(minZoom = 6, maxZoom = 10)) %>%
         addTiles(
-        	urlTemplate = "http://safeatx.com/map_tiles/asian/{z}/{x}/{y}.png",
+        	urlTemplate = "http://ec2-54-70-212-61.us-west-2.compute.amazonaws.com//map_tiles/asian/{z}/{x}/{y}.png",
         	group = "Asian",
         	options = providerTileOptions(minZoom = 6, maxZoom = 10)) %>%
         addTiles(
-        	urlTemplate = "http://safeatx.com/map_tiles/native/{z}/{x}/{y}.png",
+        	urlTemplate = "http://ec2-54-70-212-61.us-west-2.compute.amazonaws.com//map_tiles/native/{z}/{x}/{y}.png",
         	group = "Native",
         	options = providerTileOptions(minZoom = 6, maxZoom = 10)) %>%
         addTiles(
-        	urlTemplate = "http://safeatx.com/map_tiles/repubs/{z}/{x}/{y}.png",
+        	urlTemplate = "http://ec2-54-70-212-61.us-west-2.compute.amazonaws.com//map_tiles/repubs/{z}/{x}/{y}.png",
         	group = "Republicans",
         	options = providerTileOptions(minZoom = 6, maxZoom = 10)) %>%
         addTiles(
-        	urlTemplate = "http://safeatx.com/map_tiles/dems/{z}/{x}/{y}.png",
+        	urlTemplate = "http://ec2-54-70-212-61.us-west-2.compute.amazonaws.com//map_tiles/dems/{z}/{x}/{y}.png",
         	group = "Democrats",
         	options = providerTileOptions(minZoom = 6, maxZoom = 10)) %>%
        
