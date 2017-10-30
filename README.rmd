@@ -9,8 +9,7 @@
 - [Authors](#authors)
 - [Acknowledgments](#acknowledgments)
 ## Project Description
-Gerry's World is a Shiny application primarily created in R. This application allows for a user to modify existing congressional districts in Texas to create new lines that are equal in population and lean towards the actual state voting. 
-
+m
 Our hope is that we can not only teach people how gerrymandering works at a state level, but potentially allow users to crowd source the lines to help legislators and the courts get a better idea of what the citizens of Texas believe are just and fair district lines. 
 
 ![gerrys](shiny-app/img/gerrys_world.png?raw=true)
@@ -42,7 +41,7 @@ The app has a native Google Auth login. This a production server so it will not 
 * Add Race Component Score
 
 ## Development
-To start this Shiny App on your local computer, first make sure you have gdal installed.
+To start this Shiny App on your local computier, first make sure you have gdal installed.
 ```
 brew install gdal
 ```
