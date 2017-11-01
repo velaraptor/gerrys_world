@@ -10,7 +10,7 @@ race_tiles_map/*
 shiny-app/.dbf
 
 shiny-app/.prj
-
+shiny-app/temp/test.json
 shiny-app/.shx
 
 shiny-app/.shp
@@ -43,3 +43,4 @@ shiny-app/ix.RData
 *.sublime-workspace
 gerrys_world.sublime-project
 shiny-app/rsconnect/shinyapps.io/christophvel/gerrys_world.dcf
+shiny-app/temp/test.json
