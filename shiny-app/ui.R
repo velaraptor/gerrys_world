@@ -7,6 +7,21 @@ library(googleAuthR)
 library(googleID)
 library(shinyjs)
 
+# for loading
+appCSS <- "
+  #loading-content {
+    position: absolute;
+    background: #060606;
+    opacity: 0.9;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: #FFFFFF;
+  }"
+
 ui = fluidPage(
 	theme = shinytheme("cyborg"),
 	tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "icomoon.css"),
@@ -28,6 +43,9 @@ ui = fluidPage(
       }")
     )
   ),
+  useShinyjs(),
+    inlineCSS(appCSS),
+
 	navbarPage(
 		title = div(
 				a(
@@ -36,9 +54,17 @@ ui = fluidPage(
 				)
 			,
 		windowTitle = "Gerrymandering Texas",
-           
+
+    
 		tabPanel("Home",
-			useShinyjs(),
+      div(
+        id = "loading-content",
+        img(src='loader.gif' ,height='60px'),
+        h5("loading map...")
+        ),
+      hidden(
+      div(
+      id = "app-content",
 				div(class = "outer",
                 		tags$head(
                   			tags$link(
@@ -124,7 +150,7 @@ ui = fluidPage(
       				© 2017 Gerry's World All Rights Reserved.<br>
               * Disclaimer: Congressional Districts are abstract simplified polygons. They are not the exact lines that are used for the House of Representatives.</font>
               </footer>")
-		),
+		))),
 		tabPanel("How to Play",
 				fluidRow(
   					column(
@@ -168,4 +194,5 @@ ui = fluidPage(
               </footer>"))
 
 	)
+
 )

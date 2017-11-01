@@ -19,6 +19,7 @@ library(DT)
 ##shiny & graphs
 library(shinythemes)
 library(shiny)
+library(shinyjs)
 library(highcharter)
 library(googleAuthR)
 library(googleID)
@@ -749,5 +750,7 @@ server = function(input, output, session) {
 
 	output$tbl = DT::renderDataTable(clean_leaderboard)
 	dbDisconnect(connection)
+	hide(id = "loading-content", anim = TRUE, animType = "fade")    
+  	shinyjs::show(id="app-content")
 
 }
