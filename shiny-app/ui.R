@@ -7,7 +7,6 @@ library(googleAuthR)
 library(googleID)
 library(shinyjs)
 
-
 ui = fluidPage(
 	theme = shinytheme("cyborg"),
 	tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "icomoon.css"),
