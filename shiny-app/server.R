@@ -110,7 +110,7 @@ server = function(input, output, session) {
 	fixed_spdf$df <- NULL
 	connection = connection_creds()
     congressional_geoms = dbGetQuery(connection,
-    	"SELECT gid,cd115fp, d,r,winner,st_astext(geom) AS geom FROM simplified_congressional"
+    	"SELECT gid,cd115fp, d,r,winner,st_astext(geom) AS geom FROM more_simplified_congressional"
     	)
      total_amount = dbGetQuery(connection,
     	"SELECT SUM(d)/(SUM(r)+SUM(d)) AS d_percent, SUM(r)/(SUM(r)+SUM(d)) AS r_percent FROM president_race"
@@ -233,6 +233,7 @@ server = function(input, output, session) {
 				selectedPathOptions = selectedPathOptions(maintainColor=TRUE),remove=F
 			)
 		) %>%
+		addFullscreenControl() %>% 
         addLayersControl(
         	overlayGroups = c(
         		'Congressional Districts',
