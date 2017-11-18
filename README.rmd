@@ -34,12 +34,18 @@ The app has a native Google Auth login. This a production server so it will not 
 * ~~Add a live leaderboard from submitted user districts.~~
 * Create a how to play video to allow users to better understand how to play. 
 * Add Income Dot Map Tile
-* Make Login page live. 
+* ~~Make Login page live.~~
 * ~~Save simplified congressional districts to database, to unburden load on app making polygons simplified.~~ 
 * Fix potential error with native population numbers. 
 * QA Test the shit out of it. 
 * ~~Coastal Districts don't have valid geoms, ST_MAKEVALID()~~
 * Add Race Component Score
+* Add Custom Tiles to Map Box
+* Fix jquery issues
+* Make polygons not draggable
+* Push to ShinyApps.Io
+* Allow users to see their maps again
+* Fix Simplification so not that many vertices. 
 
 ## Development
 To start this Shiny App on your local computer, first make sure you have gdal installed.
