@@ -46,6 +46,7 @@ The app has a native Google Auth login. This a production server so it will not 
 * Push to ShinyApps.Io
 * Allow users to see their maps again
 * Fix Simplification so not that many vertices. 
+* Add Houston Area, Get DB, New Tab, and make Zoom Level More. Bound by counties
 
 ## Development
 To start this Shiny App on your local computer, first make sure you have gdal installed.

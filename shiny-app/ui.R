@@ -40,7 +40,10 @@ ui = fluidPage(
       .no-underline:hover {
         text-decoration: none;
         opacity: 0.5;
-      }")
+      }
+
+
+      ")
     )
   ),
   useShinyjs(),
@@ -92,10 +95,10 @@ ui = fluidPage(
 						    h6("Tips:"),
 						    br(),
 						    p("• Click on the Edit button ", img(src='edit.png')," to edit the districts."),
-						    p("• The goal is to make the district representation as close to the election results, while maintaining close to equal population representation."),
+                 p("• Click on district to get more information."),
 						    p("• Double click on vertex points to edit districts then save to see how it changes demographics/election results."),
-						    p("• Create a team name and submit your districts to be scored."),
-						    p("• Click on district to get more information.")
+						    p("• Create a team name and submit your districts to be scored.")
+						   
 						),
 
   					column(
@@ -141,11 +144,6 @@ ui = fluidPage(
       	),
         hr(),
       	HTML("<footer>
-      				<font size= '5px'>
-      				<a href='https://www.linkedin.com/in/christophvel' target='_blank' class='no-underline'><i class='icon-linkedin'></i></a>
-      				<a href='https://github.com/velaraptor' target='_blank' class='no-underline'><i class='icon-github'></i></a>
-      				</font>
-      				<br>
       				<font size='1px'>
       				© 2017 Gerry's World All Rights Reserved.<br>
               * Disclaimer: Congressional Districts are abstract simplified polygons. They are not the exact lines that are used for the House of Representatives.</font>
@@ -161,7 +159,7 @@ ui = fluidPage(
   				),
 				hr(),
 				h5(
-					"The goal of the game is to make districts that are closely equal to the results of the 2016 Presidential Election."
+					"Welcome to Gerrymandering Game Night! This game was designed to simplify the redistricting process to show the impacts gerrymandering can have on electoral politics."
 				),
 				p(
 					"Click the edit button to edit the congressional districts to ungerrymander or gerrymander the citizens of Texas."),
@@ -170,11 +168,6 @@ ui = fluidPage(
         ),
 				hr(),
       	HTML("<footer>
-      				<font size= '5px'>
-      				<a href='https://www.linkedin.com/in/christophvel' target='_blank' class='no-underline'><i class='icon-linkedin'></i></a>
-      				<a href='https://github.com/velaraptor' target='_blank' class='no-underline'><i class='icon-github'></i></a>
-      				</font>
-      				<br>
       				<font size='1px'>
       				© 2017 Gerry's World All Rights Reserved.<br>
               * Disclaimer: Congressional Districts are abstract simplified polygons. They are not the exact lines that are used for the House of Representatives.</font>
@@ -183,11 +176,6 @@ ui = fluidPage(
 		tabPanel("Leaderboard",
         DT::dataTableOutput('tbl'),hr(),
       	HTML("<footer>
-      				<font size= '5px'>
-      				<a href='https://www.linkedin.com/in/christophvel' target='_blank' class='no-underline'><i class='icon-linkedin'></i></a>
-      				<a href='https://github.com/velaraptor' target='_blank' class='no-underline'><i class='icon-github'></i></a>
-      				</font>
-      				<br>
       				<font size='1px'>
       				© 2017 Gerry's World All Rights Reserved.<br>
               * Disclaimer: Congressional Districts are abstract simplified polygons. They are not the exact lines that are used for the House of Representatives.</font>

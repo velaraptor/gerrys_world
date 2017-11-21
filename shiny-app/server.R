@@ -26,6 +26,7 @@ library(googleID)
 
 source("helper.R")
 source("postgres_creds.R")
+aws_server = 'http://ec2-34-212-119-75.us-west-2.compute.amazonaws.com'
 
 server = function(input, output, session) {
 	##authentication events
@@ -168,6 +169,8 @@ server = function(input, output, session) {
 
 	output$map = renderLeaflet({
 		leaflet() %>% 
+		
+		enableTileCaching() %>%
 		addProviderTiles(
 			providers$CartoDB.DarkMatter,
 			options = providerTileOptions(minZoom = 6, maxZoom = 10),
@@ -179,31 +182,31 @@ server = function(input, output, session) {
         addTiles(
         	urlTemplate = paste0(aws_server,"/map_tiles/race/{z}/{x}/{y}.png"),
         	group = "Hispanic",
-        	options = providerTileOptions(minZoom = 6, maxZoom = 10)) %>% 
+        	options = providerTileOptions(minZoom = 6, maxZoom = 10, errorTileUrl='http://openlayers.org/api/img/blank.gif')) %>% 
         addTiles(
         	urlTemplate = paste0(aws_server,"/map_tiles/white/{z}/{x}/{y}.png"),
         	group = "White",
-        	options = providerTileOptions(minZoom = 6, maxZoom = 10)) %>%
+        	options = providerTileOptions(minZoom = 6, maxZoom = 10, errorTileUrl='http://openlayers.org/api/img/blank.gif')) %>%
         addTiles(
         	urlTemplate=paste0(aws_server,"/map_tiles/black/{z}/{x}/{y}.png"),
         	group = "Black",
-        	options = providerTileOptions(minZoom = 6, maxZoom = 10)) %>%
+        	options = providerTileOptions(minZoom = 6, maxZoom = 10, errorTileUrl='http://openlayers.org/api/img/blank.gif')) %>%
         addTiles(
         	urlTemplate = paste0(aws_server,"/map_tiles/asian/{z}/{x}/{y}.png"),
         	group = "Asian",
-        	options = providerTileOptions(minZoom = 6, maxZoom = 10)) %>%
+        	options = providerTileOptions(minZoom = 6, maxZoom = 10, errorTileUrl='http://openlayers.org/api/img/blank.gif')) %>%
         addTiles(
         	urlTemplate = paste0(aws_server,"/map_tiles/native/{z}/{x}/{y}.png"),
         	group = "Native",
-        	options = providerTileOptions(minZoom = 6, maxZoom = 10)) %>%
+        	options = providerTileOptions(minZoom = 6, maxZoom = 10, errorTileUrl='http://openlayers.org/api/img/blank.gif')) %>%
         addTiles(
         	urlTemplate = paste0(aws_server,"/map_tiles/repubs/{z}/{x}/{y}.png"),
         	group = "Republicans",
-        	options = providerTileOptions(minZoom = 6, maxZoom = 10)) %>%
+        	options = providerTileOptions(minZoom = 6, maxZoom = 10, errorTileUrl='http://openlayers.org/api/img/blank.gif')) %>%
         addTiles(
         	urlTemplate = paste0(aws_server,"/map_tiles/dems/{z}/{x}/{y}.png"),
         	group = "Democrats",
-        	options = providerTileOptions(minZoom = 6, maxZoom = 10)) %>%
+        	options = providerTileOptions(minZoom = 6, maxZoom = 10, errorTileUrl='')) %>%
        
   		addMiniMap(tiles=providers$CartoDB.DarkMatter,toggleDisplay = TRUE,
     				position = "bottomleft") %>%
@@ -258,7 +261,7 @@ server = function(input, output, session) {
         	labels = 
         		c("White","Black","Hispanic","Asian","Native"),
         	title = "Racial Dot Legend",
-        	opacity = 1)
+        	opacity = 1) 
       
     })
     
