@@ -62,6 +62,11 @@ devtools::install_github("MarkEdmondson1234/googleID")
 ```
 If you need the credentials to the database, please contact me here or @ [Twitter](https://www.twitter.com/velaraptor). 
 **FYI trying to run this app without the credentials wont run the app.**
+To run new changes from leaflet extras, download the forked version from my account and then run these commands on your shell
+```
+R CMD BUILD <reponame>
+R CMD INSTALL <reporname.tar.gz>
+```
 
 Lastly within the directory of this github repo on your local machine, run this code to get an instance of the shiny app on your local machine @ http://localhost:6262.
 
