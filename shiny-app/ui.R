@@ -53,7 +53,7 @@ ui = fluidPage(
 		title = div(
 				a(
 					img(src = "race_tiles_map/logo.png", height = "30", width = "56"),
-					href="https://velaraptor.shinyapp.io/gerrys_world"),""
+					href="https://glasshousepolicy.shinyapp.io/gerrys_world"),""
 				)
 			,
 		windowTitle = "Gerrymandering Texas",
@@ -145,7 +145,7 @@ ui = fluidPage(
         hr(),
       	HTML("<footer>
       				<font size='1px'>
-      				© 2017 Gerry's World All Rights Reserved.<br>
+              <img src ='https://glasshousepolicy.org/wp-content/themes/glasshousepolicy/images/global/glasshouse_logo_wt.svg' height='20'></img><br>
               * Disclaimer: Congressional Districts are abstract simplified polygons. They are not the exact lines that are used for the House of Representatives.</font>
               </footer>")
 		))),
@@ -169,7 +169,7 @@ ui = fluidPage(
 				hr(),
       	HTML("<footer>
       				<font size='1px'>
-      				© 2017 Gerry's World All Rights Reserved.<br>
+              <img src ='https://glasshousepolicy.org/wp-content/themes/glasshousepolicy/images/global/glasshouse_logo_wt.svg' height='20'></img><br>
               * Disclaimer: Congressional Districts are abstract simplified polygons. They are not the exact lines that are used for the House of Representatives.</font>
               </footer>")
 				),
@@ -177,7 +177,7 @@ ui = fluidPage(
         DT::dataTableOutput('tbl'),hr(),
       	HTML("<footer>
       				<font size='1px'>
-      				© 2017 Gerry's World All Rights Reserved.<br>
+              <img src ='https://glasshousepolicy.org/wp-content/themes/glasshousepolicy/images/global/glasshouse_logo_wt.svg' height='20'></img><br>
               * Disclaimer: Congressional Districts are abstract simplified polygons. They are not the exact lines that are used for the House of Representatives.</font>
               </footer>"))
 
