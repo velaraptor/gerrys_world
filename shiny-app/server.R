@@ -112,9 +112,7 @@ server = function(input, output, session) {
 	fixed_spdf$df <- NULL
 	connection = connection_creds()
     congressional_geoms = dbGetQuery(connection,
-    	"SELECT gid,cd115fp, d,r,winner,st_astext(geom) AS geom FROM more_simplified_congressional WHERE cd115fp = any(array[
-    	'10','15','20','21','23','25', '28', '31', '35', '17'
-		]) "
+    	"SELECT __gid AS gid,cd115fp, d,r,winner,st_astext(geom) AS geom FROM small_tracts_clean "
     	)
      total_amount = dbGetQuery(connection,
     	"SELECT SUM(d)/(SUM(r)+SUM(d)) AS d_percent, SUM(r)/(SUM(r)+SUM(d)) AS r_percent FROM president_race"
