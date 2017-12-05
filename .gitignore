@@ -32,7 +32,7 @@ db_files/cb_2016_us_cd115_500k/cb_2016_us_cd115_500k.shp.iso.xml
 *.xml
 
 db_files/test.json
-
+shiny-app/temp/test.json
 rdata/map_file.RData
 shiny-app/tempdir/
 shiny-app/postgres_creds.R

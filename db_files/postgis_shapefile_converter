@@ -6,3 +6,6 @@ shp2pgsql -s 3081 Desktop/districts/files_to_put_in_db/VTDs/VTDs.shp voting_dist
 ##to run on sql db to fix SRID for voting districts. they use SRID for Texas, not US
 ##SELECT UpdateGeometrySRID('voting_districts_1','geom',4326);
 
+
+shp2pgsql -s 4326 ~/Downloads/gerrymander_districts_jesus@gmail.com/jesus@gmail.com.shp small_tracts_clean | psql -h safeatxx.cnj4vinpaowc.us-west-2.rds.amazonaws.com -d christophvel -U superuser -p 5432
+

@@ -112,7 +112,9 @@ server = function(input, output, session) {
 	fixed_spdf$df <- NULL
 	connection = connection_creds()
     congressional_geoms = dbGetQuery(connection,
-    	"SELECT gid,cd115fp, d,r,winner,st_astext(geom) AS geom FROM more_simplified_congressional"
+    	"SELECT gid,cd115fp, d,r,winner,st_astext(geom) AS geom FROM more_simplified_congressional WHERE cd115fp = any(array[
+    	'10','15','20','21','23','25', '28', '31', '35', '17'
+		]) "
     	)
      total_amount = dbGetQuery(connection,
     	"SELECT SUM(d)/(SUM(r)+SUM(d)) AS d_percent, SUM(r)/(SUM(r)+SUM(d)) AS r_percent FROM president_race"
@@ -399,7 +401,7 @@ server = function(input, output, session) {
 		
 		}
 		counts_pop = total %>% group_by(check) %>% summarise(count=n())
-		if(counts_pop[counts_pop$check=='good',2]<36){
+		if(counts_pop[counts_pop$check=='good',2]<10){
 			fixes=total[total$check=='fix',]
 			paste0("Population districts are not even!", br(),"Districts to fix: ",   paste(fixes$cd115fp,collapse = ", "))
 		}else{
@@ -437,6 +439,8 @@ server = function(input, output, session) {
 
 	observe({
 		ddd = as.data.frame(total_districts_by_party()$count/sum(total_districts_by_party()$count))
+		# only use this line cause we are doing a subset, if not clear the next line
+		total_amount$r_percent = .5
 		leaning = ddd[2,]-total_amount$r_percent
 		if(abs(leaning)>=0 & abs(leaning)<=.04){
 			output$score=renderUI({HTML(paste("<center>",h6("Good Districts!"),"</center>"))})
