@@ -35,7 +35,6 @@ db_files/test.json
 shiny-app/temp/test.json
 rdata/map_file.RData
 shiny-app/tempdir/
-shiny-app/postgres_creds.R
 shiny-app/www/.DS_Store
 .DS_Store
 colorout/

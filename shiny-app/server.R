@@ -212,7 +212,7 @@ server = function(input, output, session) {
     				position = "bottomleft") %>%
         addPolygons( 
 			data = district_spdf,
-			fillOpacity = 0.3,
+			fillOpacity = 0.15,
 			color = 'white',
 			fillColor = ~factpal(winner),
 			weight = 1.5,
@@ -224,7 +224,7 @@ server = function(input, output, session) {
 			opacity = 1,
 			group='Congressional Districts',
 			highlightOptions = highlightOptions(
-                color='#A8A8A8', opacity = 1, weight = 3, fillOpacity = .4,
+                color='#A8A8A8', opacity = 1, weight = 3, fillOpacity = .25,
                 bringToFront = TRUE, sendToBack = TRUE)) %>%
         addDrawToolbar(
         	polylineOptions = F,
@@ -599,7 +599,7 @@ server = function(input, output, session) {
 			clearShapes() %>%
 			addPolygons( 
 			data = fixed_spdf$df,
-			fillOpacity = 0.2,
+			fillOpacity = 0.15,
 			color = 'white',
 			fillColor = ~factpal(winner),
 			weight = 1.5,
@@ -611,7 +611,7 @@ server = function(input, output, session) {
 			opacity = 1,
 			group='Congressional Districts',
 			highlightOptions = highlightOptions(
-                color='#A8A8A8', opacity = 1, weight = 3, fillOpacity = .4,
+                color='#A8A8A8', opacity = 1, weight = 3, fillOpacity = .25,
                 bringToFront = TRUE, sendToBack = TRUE))
 			
 
