@@ -487,7 +487,9 @@ server = function(input, output, session) {
 		if(typeof(input$map_draw_edited_features)=="list"){
 			ix = input$map_draw_edited_features
 			connection = connection_creds()
-			write(RJSONIO::toJSON(ix),"temp/test.json")
+			date = Sys.Date()
+			random_number = sample(1:100, 1)
+			write(RJSONIO::toJSON(ix),paste0("temp/test_",random_number,"_",date,".json"))
 			incProgress(.25, detail = paste("Almost done."))
 			new_data_race = dbGetQuery(connection,
 				paste0(
@@ -549,7 +551,7 @@ server = function(input, output, session) {
 			dbDisconnect(connection)
 			incProgress(.5, detail = paste("Almost done.."))
 
-			g = geojsonio::geojson_read("temp/test.json",what = "sp")
+			g = geojsonio::geojson_read(paste0("temp/test_",random_number,"_",date,".json"),what = "sp")
 
 			g = merge(g,new_votes_data,by.x="layerId",by.y="gid")
 
@@ -755,5 +757,6 @@ server = function(input, output, session) {
 	dbDisconnect(connection)
 	hide(id = "loading-content", anim = TRUE, animType = "fade")    
   	shinyjs::show(id="app-content")
+  	#session$allowReconnect("force")
 
 }
