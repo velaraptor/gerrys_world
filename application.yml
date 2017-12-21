@@ -1,0 +1,24 @@
+shiny:
+  proxy:
+    title: Gerrymandering
+    logo-url: http://www.openanalytics.eu/sites/www.openanalytics.eu/themes/oa/logo.png
+    landing-page: /
+    heartbeat-rate: 10000
+    heartbeat-timeout: 60000
+    port: 8080
+    authentication: none
+    docker:
+      cert-path: /Users/velaraptor/.docker/machine/machines/default
+      url: https://192.168.99.100:2376
+      host:  192.168.99.100
+      port-range-start: 20000
+  apps:
+  - name: gerrys_world_01
+    display-name: Gerry's World
+    description: Gerrymandering
+    docker-cmd: ["R", "-e shiny::runApp('/root/gerrys_world')"]
+    docker-image: gerrys_world.01:latest
+
+logging:
+  file:
+    shinyproxy.log

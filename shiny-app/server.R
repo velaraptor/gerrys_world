@@ -2,7 +2,7 @@
 library(rgdal)    
 library(sp)   
 library(rgeos)
-library(rmapshaper)
+#library(rmapshaper)
 library(leaflet)
 library(leaflet.extras)
 
