@@ -183,6 +183,10 @@ ui = fluidPage(
         tags$ul("• Be sure to save your changes as you make them to see how it changes the demographics of the districts."),
         tags$ul("• Get creative when it comes to drawing these districts (legislators definitely do) -- take at look at District 35, represented by Lloyd Doggett to see how small and specific this district was drawn to pack in democratic voters."),
         hr(),
+        h5("Gerry's World in the News"),
+
+        HTML("<center><iframe src='https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2FKLRUAustinPBS%2Fvideos%2F900138163474614%2F&show_text=0&width=476' width='476' height='476' style='border:none;overflow:hidden' scrolling='no' frameborder='0' allowTransparency='true' allowFullScreen='true'></iframe></center>"),
+        hr(),
       	HTML("<footer>
       				<font size='1px'>
               <img src ='https://glasshousepolicy.org/wp-content/themes/glasshousepolicy/images/global/glasshouse_logo_wt.svg' height='20'></img><br>

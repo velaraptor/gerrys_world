@@ -29,8 +29,17 @@ aws_server = 'http://ec2-34-212-119-75.us-west-2.compute.amazonaws.com'
 server = function(input, output, session) {
 	##our reactive spdf polygon initiated 
 	fixed_spdf = reactiveValues()
-
-
+  username=Sys.getenv("SHINYPROXY_USERNAME")
+  output$user_name=renderUI({
+    if(username==''){
+      HTML(paste(h5(paste0('No username')
+      ))
+      )
+    }else{
+    HTML(paste(h5(paste0(username)
+                  ))
+    )}
+  })
     observe({
     	if(is.null(input$map_shape_click)){
     		output$msc=reactive({
