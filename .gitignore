@@ -48,3 +48,4 @@ shiny-app/temp/test.json
 shiny-server.conf
 shiny-server.sh
 shinyproxy.log
+*.jar
