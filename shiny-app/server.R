@@ -167,9 +167,6 @@ server = function(input, output, session) {
         	urlTemplate = paste0(aws_server,"/map_tiles/dems/{z}/{x}/{y}.png"),
         	group = "Democrats",
         	options = providerTileOptions(minZoom = 6, maxZoom = 10, errorTileUrl='')) %>%
-       
-  		addMiniMap(tiles=providers$CartoDB.DarkMatter,toggleDisplay = TRUE,
-    				position = "bottomleft") %>%
         addPolygons( 
 			data = district_spdf,
 			fillOpacity = 0.15,

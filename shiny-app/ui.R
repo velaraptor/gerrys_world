@@ -50,8 +50,8 @@ ui = fluidPage(
 	navbarPage(
 		title = div(
 				a(
-					img(src = "race_tiles_map/logo.png", height = "30", width = "56"),
-					href="https://glasshousepolicy.shinyapp.io/gerrys_world"),""
+					img(src = "race_tiles_map/logo.png", height = "30", width = "56")
+					),""
 				)
 			,
 		windowTitle = "Gerrymandering Texas",
