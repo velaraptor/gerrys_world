@@ -575,7 +575,6 @@ server = function(input, output, session) {
 
 	##let's download the data for the user and insert it into our database
 	observe({
-				dbWriteTable(connection, c("public","scores"), value=scores_to_insert,append=TRUE, row.names=FALSE)
 		output$btnSave <- downloadHandler(
 
 			function() 
