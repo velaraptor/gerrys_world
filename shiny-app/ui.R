@@ -3,8 +3,6 @@ library(leaflet)
 library(leaflet.extras)
 library(shinythemes)
 library(highcharter)
-library(googleAuthR)
-library(googleID)
 library(shinyjs)
 
 # for loading
@@ -80,16 +78,11 @@ ui = fluidPage(
             column(
          				width = 2,
          				
-         				htmlOutput("user_image"),
-         				br(),
-         				googleAuthUI("loginButton"),
-         				hr(),
          				conditionalPanel(condition="output.n=='TRUE'",
          					htmlOutput("emailerror")
          					),
-         				conditionalPanel(condition="output.n=='TRUE'",
-         					textInput("teamname", "Email Address", "")
-         					),
+         				
+         				textInput("teamname", "Email Address", ""),
 						    downloadButton("btnSave", "Submit Districts", class="btn-info"),
 						    hr(),
 						    h6("Tips:"),

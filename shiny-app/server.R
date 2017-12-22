@@ -10,7 +10,7 @@ library(leaflet.extras)
 library(RPostgreSQL)
 library(DBI)
 library(rpostgis)
-
+ 
 ##data manipulation tables
 library(dplyr)
 library(data.table)
@@ -21,58 +21,15 @@ library(shinythemes)
 library(shiny)
 library(shinyjs)
 library(highcharter)
-library(googleAuthR)
-library(googleID)
 
 source("helper.R")
 source("postgres_creds.R")
 aws_server = 'http://ec2-34-212-119-75.us-west-2.compute.amazonaws.com'
 
 server = function(input, output, session) {
-	##authentication events
-	rv = reactiveValues(
-        login = FALSE
-    )
-
-	access_token = callModule(googleAuth, "loginButton")
 	##our reactive spdf polygon initiated 
 	fixed_spdf = reactiveValues()
-	userDetails = reactive({
-        validate(
-            need(access_token(), "")
-        )
 
-        rv$login <- TRUE
-        with_shiny(get_user_info, shiny_access_token = access_token())
-    })
-
-    output$user_image = renderUI({
-		validate(
-			need(userDetails(), HTML(""))
-		)
-		HTML(
-			paste0("<div class='row'><div class='col-sm-2'><img class='img-circle' src='",
-  					userDetails()$image$url,
-  					"' height='30px'></div><div class='col-sm-10'>",
-  					p(userDetails()$displayName),
-  					"</div></div>"
-  			)
-  		)
-    })
-
-    observe({
-    	if(rv$login){
-    		output$n=reactive({
-	 			return("FALSE")
-	 		})
-    	}
-    	else{
-    	    	output$n=reactive({
-	 				return("TRUE")
-	 			})
-    	}
-    	outputOptions(output, 'n', suspendWhenHidden=FALSE)
-    })
 
     observe({
     	if(is.null(input$map_shape_click)){
@@ -86,26 +43,20 @@ server = function(input, output, session) {
     		}
     	outputOptions(output, 'msc', suspendWhenHidden=FALSE)
     })
-
     observe({
-    	validate(
-            need(userDetails(), ""))
-    		if(is.null(userDetails()$gender)){
-    			gender = "NA"
-    			}else{
-    				gender = userDetails()$gender
-    			}
-            user_info=data.frame(userDetails()$displayName,gender,userDetails()$emails$value)
-            names(user_info)=c("displayname","gender","email")
-            connection = connection_creds()
-            count=dbGetQuery(connection,paste0("SELECT COUNT(*) FROM usr_info WHERE email ='",userDetails()$emails$value,"'"))
-            dbDisconnect(connection)
-            if(count$count==0){
-            	connection = connection_creds()
-            	dbWriteTable(connection, c("public","usr_info"), value=user_info,append=TRUE, row.names=FALSE)
-            	dbDisconnect(connection)
-            }
-        
+
+    	if((isValidEmail(input$teamname))
+    		
+    	){
+    	output$n=reactive({
+				return("FALSE")
+			})
+    	}else{
+    			output$n=reactive({
+				return("TRUE")
+			})
+    	}
+    	outputOptions(output, 'n', suspendWhenHidden=FALSE)
     })
 
     ## code beginning getting district polygons from db 
@@ -587,13 +538,6 @@ server = function(input, output, session) {
 					),
 					big.mark=",")
 			)
-			observe({
-    	  		validate(
-            		need(userDetails(), HTML(""))
-        		)
-    			fixed_spdf$df$user_name = userDetails()$emails$value
-
-    		})
 
 			##need to fix coordinates and popup 
 			leafletProxy("map") %>% 
@@ -621,7 +565,7 @@ server = function(input, output, session) {
 
 	
 	output$emailerror = renderUI({
-		validate(need(isValidEmail(input$teamname),
+		shiny::validate(need(isValidEmail(input$teamname),
        			HTML(
        				paste("Please type a valid e-mail address")
        			)
@@ -631,40 +575,13 @@ server = function(input, output, session) {
 
 	##let's download the data for the user and insert it into our database
 	observe({
-	if(rv$login){
-			output$btnSave <- downloadHandler(
-			function() 
-				{
-		
-					paste0("gerrymander_districts",
-							"_",
-							userDetails()$displayName , 
-							".zip")
-
-				}, 
-			function(file) {
-				connection = connection_creds()
-				datetime = Sys.time()
-				fixed_spdf$df$date = datetime
-				pgInsert(connection, name = c("public", "user_data"), data.obj = fixed_spdf$df,overwrite = F,new.id = "id")
-				scores_to_insert = as.data.frame(cbind(population_score(),leaning_score(),userDetails()$emails$value,as.character(datetime)))
-				names(scores_to_insert) = c("pop","leaning","email","date")
 				dbWriteTable(connection, c("public","scores"), value=scores_to_insert,append=TRUE, row.names=FALSE)
-				dbDisconnect(connection)
-				shp = writeRasterZip(
-						fixed_spdf$df, 
-						file, 
-						userDetails()$displayName,
-						format="ESRI Shapefile")
-
-				})
-		}else{
-				output$btnSave <- downloadHandler(
+		output$btnSave <- downloadHandler(
 
 			function() 
 			{
 		
-				validate(need(isValidEmail(input$teamname),
+				shiny::validate(need(isValidEmail(input$teamname),
       			 paste("Please Input a valid E-mail address")))
 				paste0("gerrymander_districts",
 						"_",
@@ -689,19 +606,8 @@ server = function(input, output, session) {
 						format="ESRI Shapefile")
 
 			}
-			)
-
-		}
+		)
 	})
-
-	##sign out page to redirect
-	observe({
-    	if (rv$login) {
-        	shinyjs::onclick("loginButton-googleAuthUi",
-            	shinyjs::runjs("window.location.href = 'http://localhost:8001/www/login.html';"))
-    	}
-	})
-
 	##leaderboards FTW 
 	connection = connection_creds()
 	usr_table = dbGetQuery(connection,"
