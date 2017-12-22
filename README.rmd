@@ -15,6 +15,7 @@ Gerry's World is a Shiny application primarily created in R. This application al
 Our hope is that we can not only teach people how gerrymandering works at a state level, but potentially allow users to crowd source the lines to help legislators and the courts get a better idea of what the citizens of Texas believe are just and fair district lines. 
 
 ![gerrys](shiny-app/img/gerrys_world.png?raw=true)
+![loginpage](shiny-app/img/loginpage.png?raw=true)
 ![graph](shiny-app/img/graph.png?raw=true)
 ![leaderboard](shiny-app/img/leaderboard.png?raw=true)
 ## Data
