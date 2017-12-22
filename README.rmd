@@ -6,6 +6,7 @@
 - [Data](#data)
 - [Roadmap](#roadmap)
 - [Development](#development)
+- [ShinyProxy and Docker](#shinyproxy-and-docker)
 - [Authors](#authors)
 - [Acknowledgments](#acknowledgments)
 ## Project Description
@@ -17,7 +18,6 @@ Our hope is that we can not only teach people how gerrymandering works at a stat
 ![graph](shiny-app/img/graph.png?raw=true)
 ![leaderboard](shiny-app/img/leaderboard.png?raw=true)
 ## Data
-
 The data used in the backend on our Postgres Database includes:
 * Current ACS Census Tract Data 
 	* Income
@@ -27,12 +27,12 @@ The data used in the backend on our Postgres Database includes:
 * Shapefiles for Congressional Districts, Voting Districts, and Census Tracts
 
 ## Roadmap
-Currently the app is being hosted @ https://christophvel.shinyapps.io/gerrys_world
+Currently the app is being hosted @ https://glasshousepolicy.shinyapps.io/gerrys_world
 The app has a native Google Auth login. This a production server so it will not being running as quickly, Currently you can edit the congressional districts and save a shapefile of your edited districts and a copy will be written to the database. 
 
 * The next steps are to migrate this app to either an AWS server or a paid Shinyapp.io server to handle more users & better authentication.
 * ~~Add a live leaderboard from submitted user districts.~~
-* Create a how to play video to allow users to better understand how to play. 
+* ~~Create a how to play video to allow users to better understand how to play.~~
 * Add Income Dot Map Tile
 * ~~Make Login page live.~~
 * ~~Save simplified congressional districts to database, to unburden load on app making polygons simplified.~~ 
@@ -43,10 +43,10 @@ The app has a native Google Auth login. This a production server so it will not 
 * Add Custom Tiles to Map Box
 * Fix jquery issues
 * Make polygons not draggable
-* Push to ShinyApps.Io
+* ~~Push to ShinyApps.Io~~
 * Allow users to see their maps again
-* Fix Simplification so not that many vertices. 
-* Add Houston Area, Get DB, New Tab, and make Zoom Level More. Bound by counties
+* ~~Fix Simplification so not that many vertices.~~ 
+* ~~Add Houston Area, Get DB, New Tab, and make Zoom Level More. Bound by counties~~
 
 ## Development
 To start this Shiny App on your local computer, first make sure you have gdal installed.
@@ -74,6 +74,42 @@ Lastly within the directory of this github repo on your local machine, run this 
 library(shiny)
 runApp('shiny-app',port=6262)
 ```
+## ShinyProxy and Docker
+Currently we will be using an open-source version of Shiny Server, [ShinyProxy](https://www.shinyproxy.io/). ShinyProxy allows us to not just add authenticaion, but dockerize the app and be able to scale. 
+ ### Instructions
+* To edit ShinyProxy pages such as login, clone our forked version of [ShinyProxy](https://github.com/velaraptor/shinyproxy)
+* To edit the leaflet.extras library for R, clone our forked version of [Leaflet.Extras](
+https://github.com/velaraptor/leaflet.extras)
+* For Mac/OSX, have brew install and install these libraries for ShinyProxy
+```bash
+brew install socat
+xcode-select --install
+brew install gcc
+brew install maven
+```
+* To build ShinyProxy, run the following code and in the target directory, shinyproxy-1.0.2.jar will be the file you want to see your changes. 
+```bash
+mvn -U clean install
+```
+* Make sure you have docker installed, and then run the following commands so ShinyProxy will be able to talk to our Docker Container
+```bash
+socat TCP-LISTEN:2375,range=127.0.0.1/32,reuseaddr,fork UNIX-CLIENT:/var/run/docker.sock
+```
+* To create a local docker image from this repo
+```bash
+docker build -t gerrys_world.dev .
+```
+* To get master bulid from docker cloud (note if you want to make changes, create a branch, since this image automatically builds from master)
+```bash
+curl -u username:8bbbd7a9-8304-431e-8533-cd949f92bd7f https://cloud.docker.com/api/app/v1/service/
+docker pull velaraptor/gerrys_world
+```
+* Lastly to see application, edit the application.yml file in this repo and change the docker-image to the corresponding image you want to use. Then run the following code and the application will be available at http://127.0.0.1:8080/ 
+```bash
+java -jar shinyproxy-1.0.2.jar
+```
+
+
 ## Authors 
 * **Chris Vela**
 
