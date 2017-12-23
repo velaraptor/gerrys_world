@@ -81,9 +81,10 @@ ui = fluidPage(
          				conditionalPanel(condition="output.n=='TRUE'",
          					htmlOutput("emailerror")
          					),
-         				
-         				textInput("teamname", "Email Address", ""),
+         				conditionalPanel(condition="output.us=='TRUE'",
+         				textInput("teamname", "Email Address", "")),
 						    downloadButton("btnSave", "Submit Districts", class="btn-info"),
+                #uiOutput("previousmaps"),
 						    hr(),
 						    h6("Tips:"),
 						    br(),

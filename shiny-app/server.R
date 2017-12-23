@@ -29,17 +29,8 @@ aws_server = 'http://ec2-34-212-119-75.us-west-2.compute.amazonaws.com'
 server = function(input, output, session) {
 	##our reactive spdf polygon initiated 
 	fixed_spdf = reactiveValues()
-  username=Sys.getenv("SHINYPROXY_USERNAME")
-  output$user_name=renderUI({
-    if(username==''){
-      HTML(paste(h5(paste0('No username')
-      ))
-      )
-    }else{
-    HTML(paste(h5(paste0(username)
-                  ))
-    )}
-  })
+  	username = Sys.getenv("SHINYPROXY_USERNAME")
+
     observe({
     	if(is.null(input$map_shape_click)){
     		output$msc=reactive({
@@ -53,8 +44,21 @@ server = function(input, output, session) {
     	outputOptions(output, 'msc', suspendWhenHidden=FALSE)
     })
     observe({
+    	if(username==''){
+			output$us=reactive({
+							return("TRUE")
+						})
+    		}else{
+				output$us=reactive({
+				return("FALSE")
+			})
+    		}
+    	outputOptions(output, 'us', suspendWhenHidden=FALSE)
+    	})
 
-    	if((isValidEmail(input$teamname))
+    observe({
+
+    	if((isValidEmail(input$teamname)) 
     		
     	){
     	output$n=reactive({
@@ -581,37 +585,73 @@ server = function(input, output, session) {
 
 	##let's download the data for the user and insert it into our database
 	observe({
-		output$btnSave <- downloadHandler(
+		if(username==''){
+			output$btnSave <- downloadHandler(
 
-			function() 
-			{
-		
-				shiny::validate(need(isValidEmail(input$teamname),
-      			 paste("Please Input a valid E-mail address")))
-				paste0("gerrymander_districts",
-						"_",
-						input$teamname , 
-						".zip")
+				function() 
+				{
+			
+					shiny::validate(need(isValidEmail(input$teamname),
+	      			 paste("Please Input a valid E-mail address")))
+					paste0("gerrymander_districts",
+							"_",
+							input$teamname , 
+							".zip")
 
-			}, 
-			function(file) {
-				connection = connection_creds()
-				fixed_spdf$df$user_name = input$teamname
-				datetime = Sys.time()
-				fixed_spdf$df$date = datetime
-				pgInsert(connection, name = c("public", "user_data"), data.obj = fixed_spdf$df,overwrite = F,new.id = "id")
-				scores_to_insert = as.data.frame(cbind(population_score(),leaning_score(),input$teamname,as.character(datetime)))
-				names(scores_to_insert) = c("pop","leaning","email","date")
-				dbWriteTable(connection, c("public","scores"), value=scores_to_insert,append=TRUE, row.names=FALSE)
-				dbDisconnect(connection)
-				shp = writeRasterZip(
-						fixed_spdf$df, 
-						file,
-						input$teamname,
-						format="ESRI Shapefile")
+				}, 
+				function(file) {
+					connection = connection_creds()
+					fixed_spdf$df$user_name = input$teamname
+					datetime = Sys.time()
+					fixed_spdf$df$date = datetime
+					pgInsert(connection, name = c("public", "user_data"), data.obj = fixed_spdf$df,overwrite = F,new.id = "id")
+					scores_to_insert = as.data.frame(cbind(population_score(),leaning_score(),input$teamname,as.character(datetime)))
+					names(scores_to_insert) = c("pop","leaning","email","date")
+					dbWriteTable(connection, c("public","scores"), value=scores_to_insert,append=TRUE, row.names=FALSE)
+					dbDisconnect(connection)
+					shp = writeRasterZip(
+							fixed_spdf$df, 
+							file,
+							input$teamname,
+							format="ESRI Shapefile")
 
+				}
+			)
+		}else{
+			if(grepl('@',username)){
+				username = gsub('@', '', username)
 			}
-		)
+			output$btnSave <- downloadHandler(
+
+				function() 
+				{
+			
+					paste0("gerrymander_districts",
+							"_",
+							username , 
+							".zip")
+
+				}, 
+				function(file) {
+					connection = connection_creds()
+					fixed_spdf$df$user_name = username
+					datetime = Sys.time()
+					fixed_spdf$df$date = datetime
+					pgInsert(connection, name = c("public", "user_data"), data.obj = fixed_spdf$df,overwrite = F,new.id = "id")
+					scores_to_insert = as.data.frame(cbind(population_score(),leaning_score(),username,as.character(datetime)))
+					names(scores_to_insert) = c("pop","leaning","email","date")
+					dbWriteTable(connection, c("public","scores"), value=scores_to_insert,append=TRUE, row.names=FALSE)
+					dbDisconnect(connection)
+					shp = writeRasterZip(
+							fixed_spdf$df, 
+							file,
+							username,
+							format="ESRI Shapefile")
+
+				}
+			)
+
+		}
 	})
 	##leaderboards FTW 
 	connection = connection_creds()
