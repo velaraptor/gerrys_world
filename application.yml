@@ -23,8 +23,8 @@ shiny:
     display-name: Gerry's World
     description: Gerrymandering
     docker-cmd: ["R","-e shiny::runApp('/root/gerrys_world',port=3838,host='0.0.0.0')"]
-    docker-image: velaraptor/gerrys_world
-
+    docker-image: gerrys_world.dev
+    #docker-image: velaraptor/gerrys_world
 logging:
   file:
     shinyproxy.log

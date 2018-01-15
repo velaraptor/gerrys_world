@@ -30,7 +30,7 @@ server = function(input, output, session) {
 	##our reactive spdf polygon initiated 
 	fixed_spdf = reactiveValues()
   	username = Sys.getenv("SHINYPROXY_USERNAME")
-
+  	username='velaraptor'
     observe({
     	if(is.null(input$map_shape_click)){
     		output$msc=reactive({
@@ -56,6 +56,23 @@ server = function(input, output, session) {
     	outputOptions(output, 'us', suspendWhenHidden=FALSE)
     	})
 
+    output$previousmaps <- renderUI({if(username!=''){
+    	if(grepl('@',username)){
+				username = gsub('@', '', username)
+			}
+		connection = connection_creds()
+		previous_reports = dbGetQuery(connection, paste0("SELECT user_data.date FROM user_data WHERE user_name ='",username,"'GROUP BY user_data.date"))
+		dbDisconnect(connection)
+		previous_reports$date=as.character(previous_reports$date)
+		previous_reports=rbind('Current', previous_reports)
+		names(previous_reports) = 'date'
+		selectInput("previousmaps_1", "Choose Previous Map", previous_reports$date, selected='Current')
+
+	}
+		})
+
+    p_maps = reactive({ input$previousmaps_1 })
+    
     observe({
 
     	if((isValidEmail(input$teamname)) 
@@ -71,48 +88,99 @@ server = function(input, output, session) {
     	}
     	outputOptions(output, 'n', suspendWhenHidden=FALSE)
     })
+    ## code beginning getting district polygons from db
 
-    ## code beginning getting district polygons from db 
-	fixed_spdf$df <- NULL
-	connection = connection_creds()
-    congressional_geoms = dbGetQuery(connection,
-    	"SELECT __gid AS gid,cd115fp, d,r,winner,st_astext(geom) AS geom FROM small_tracts_clean "
-    	)
-     total_amount = dbGetQuery(connection,
-    	"SELECT SUM(d)/(SUM(r)+SUM(d)) AS d_percent, SUM(r)/(SUM(r)+SUM(d)) AS r_percent FROM president_race"
-    	)
+		fixed_spdf$df <- NULL
+		connection = connection_creds()
+	    congressional_geoms = dbGetQuery(connection,
+	    	"SELECT __gid AS gid,cd115fp, d,r,winner,st_astext(geom) AS geom FROM small_tracts_clean "
+	    	)
+	     total_amount = dbGetQuery(connection,
+	    	"SELECT SUM(d)/(SUM(r)+SUM(d)) AS d_percent, SUM(r)/(SUM(r)+SUM(d)) AS r_percent FROM president_race"
+	    	)
 
-    summary_stats = dbGetQuery(connection,"SELECT * FROM house_district_summ_stats")
-    
-    ##read WKT of POSTGIS query for congressional districts
-    for(i in seq(nrow(congressional_geoms))){
-		if(i == 1){
-			p <- readWKT(congressional_geoms$geom[i], id = congressional_geoms$gid[i])
-		}
-		else{
-			p=rbind(p,readWKT(congressional_geoms$geom[i], id = congressional_geoms$gid[i]))
+	    summary_stats = dbGetQuery(connection,"SELECT * FROM house_district_summ_stats")
+	    
+	    ##read WKT of POSTGIS query for congressional districts
+	    for(i in seq(nrow(congressional_geoms))){
+			if(i == 1){
+				p <- readWKT(congressional_geoms$geom[i], id = congressional_geoms$gid[i])
 			}
-	}
-    
-    t = data.frame(congressional_geoms,row.names = congressional_geoms$gid)
-    congress_geom_sppdf = SpatialPolygonsDataFrame(p,t[-6])
-    crs.geo = CRS("+proj=longlat +datum=WGS84 +ellps=WGS84")
-    proj4string(congress_geom_sppdf) = crs.geo
+			else{
+				p=rbind(p,readWKT(congressional_geoms$geom[i], id = congressional_geoms$gid[i]))
+				}
+		}
+	    
+	    t = data.frame(congressional_geoms,row.names = congressional_geoms$gid)
+	    congress_geom_sppdf = SpatialPolygonsDataFrame(p,t[-6])
+	    crs.geo = CRS("+proj=longlat +datum=WGS84 +ellps=WGS84")
+	    proj4string(congress_geom_sppdf) = crs.geo
 
-    district_spdf = congress_geom_sppdf
-        
-    ##make district_spdf reactive, be able to edit winner, and population totals, and geoms 
+	    district_spdf = congress_geom_sppdf
+	        
+	    ##make district_spdf reactive, be able to edit winner, and population totals, and geoms 
 
-    district_summary=read.csv("district_summary.csv")
-    income_by_district=read.csv("income_by_district.csv")
-    race_numbers=read.csv("race_by_district.csv")
+	    district_summary=read.csv("district_summary.csv")
+	    income_by_district=read.csv("income_by_district.csv")
+	    race_numbers=read.csv("race_by_district.csv")
 
-    static_race_numbers=read.csv("race_by_district.csv")
-    static_votes_numbers = district_spdf@data
-    district_spdf=merge(district_spdf,race_numbers,by="gid")
+	    static_race_numbers=read.csv("race_by_district.csv")
+	    static_votes_numbers = district_spdf@data
+	    district_spdf=merge(district_spdf,race_numbers,by="gid")
 
-    dbDisconnect(connection)
-    
+	    dbDisconnect(connection)
+	    observe({
+        if(length(p_maps()) > 0 && p_maps()!='Current'){
+		
+			
+			connection = connection_creds()
+			
+			congressional_geoms = dbGetQuery(connection,
+				paste0("SELECT gid, cd115fp, d ,r, winner, hispanic, white, black, native, asian,
+					user_name, st_astext(geom) AS geom
+				 FROM user_data WHERE user_name ='",username,"' AND user_data.date = '",p_maps(),"'")
+				)
+
+			##read WKT of POSTGIS query for congressional districts
+			for(i in seq(nrow(congressional_geoms))){
+				if(i == 1){
+					p <- readWKT(congressional_geoms$geom[i], id = congressional_geoms$gid[i])
+				}
+				else{
+					p=rbind(p,readWKT(congressional_geoms$geom[i], id = congressional_geoms$gid[i]))
+					}
+			}
+
+			t = data.frame(congressional_geoms,row.names = congressional_geoms$gid)
+			congress_geom_sppdf = SpatialPolygonsDataFrame(p,t[-13])
+			crs.geo = CRS("+proj=longlat +datum=WGS84 +ellps=WGS84")
+			proj4string(congress_geom_sppdf) = crs.geo
+
+			district_spdf = congress_geom_sppdf
+			dbDisconnect(connection)
+			fixed_spdf$df = district_spdf
+			
+			leafletProxy("map") %>% 
+			  clearShapes() %>%
+			  addPolygons( 
+			    data = fixed_spdf$df,
+			    fillOpacity = 0.15,
+			    color = 'white',
+			    fillColor = ~factpal(winner),
+			    weight = 1.5,
+			    layerId = fixed_spdf$df@data$gid,
+			    label = paste0("District ",fixed_spdf$df@data$cd115fp),
+			    smoothFactor = 0.2,
+			    stroke = TRUE, 
+			    opacity = 1,
+			    group='Congressional Districts',
+			    highlightOptions = highlightOptions(
+			      color='#A8A8A8', opacity = 1, weight = 3, fillOpacity = .25,
+			      bringToFront = TRUE, sendToBack = TRUE))
+			
+
+        } 
+        })
     factpal = colorFactor(c("#3E66F3","#ff6750"), district_spdf$winner)
     popup = paste0("<h6><font color='#000000'>District Number:</font><b><font color='#2a9fd6'> ",
     			district_spdf@data$cd115fp,
@@ -459,7 +527,7 @@ server = function(input, output, session) {
 					"'::json AS fc)
 					SELECT
 					m.gid,SUM(m.proportion*m.hispanic) AS hispanic, SUM(m.proportion*m.white) AS white,
-					SUM(m.proportion*m.black) AS black,SUM(m.proportion*m.asian) AS asian,SUM(m.proportion*m.native) AS native
+					SUM(m.proportion*m.black) AS black,SUM(m.proportion*m.native) AS native,SUM(m.proportion*m.asian) AS asian
 					FROM
 					(SELECT (feat->'properties'->>'layerId')::int AS gid,
 					    b.gid AS gid_2, n.hispanic,
@@ -526,7 +594,6 @@ server = function(input, output, session) {
 			g = merge(g,new_data_race,by="gid")
 			g = g[,-2]
 			g = g[c(1,5,2,3,4,6:10)]
-
 			for(i in 1:nrow(g)){
 			  fixed_spdf$df@data[fixed_spdf$df$gid == g$gid[i],] = g@data[i,]
 			  fixed_spdf$df@polygons[fixed_spdf$df$gid == g$gid[i]] = g@polygons[i]
@@ -677,7 +744,13 @@ server = function(input, output, session) {
 		ORDER BY score DESC")
 
 	usr_table$date = as.POSIXct(strptime(usr_table$date, "%Y-%m-%d %H:%M:%S"))
-
+	anonymize =  function(x) {
+		for(i in 5:nchar(x)){
+	    	substring(x, i) ='*'
+		}
+		return(x)
+	}
+	usr_table$email=apply(as.matrix(usr_table$email),1:2,anonymize)
 	clean_leaderboard = datatable(usr_table,
 							style = 'bootstrap',
 							options = 

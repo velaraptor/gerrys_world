@@ -49,3 +49,5 @@ shiny-server.conf
 shiny-server.sh
 shinyproxy.log
 *.jar
+*.out
+to_do.txt
