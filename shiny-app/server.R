@@ -30,7 +30,8 @@ server = function(input, output, session) {
 	##our reactive spdf polygon initiated 
 	fixed_spdf = reactiveValues()
   	username = Sys.getenv("SHINYPROXY_USERNAME")
-  	username='velaraptor'
+  	# for testing purposes!
+  	# username='velaraptor'
     observe({
     	if(is.null(input$map_shape_click)){
     		output$msc=reactive({
