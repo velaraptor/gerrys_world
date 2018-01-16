@@ -29,9 +29,8 @@ RUN sudo apt-get install -y libjq-dev
 
 # install R packages
 RUN R -e "install.packages(c('rgdal', 'rgeos'), type='source')"
-RUN R -e "install.packages(c('devtools','sp','leaflet','DT','dplyr','RPostgreSQL','DBI','shinythemes','shiny','highcharter','googleAuthR','data.table','rpostgis','RJSONIO','shinyjs'), repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages(c('devtools','sp','leaflet','DT','dplyr','RPostgreSQL','DBI','shinythemes','shiny','highcharter','data.table','rpostgis','RJSONIO','shinyjs'), repos='http://cran.rstudio.com/')"
 RUN R -e "devtools::install_github('velaraptor/leaflet.extras')"
-RUN R -e "devtools::install_github('MarkEdmondson1234/googleID')"
 RUN R -e "install.packages('geojsonio', repos ='http://cran.rstudio.com/')"
 
 RUN mkdir /root/gerrys_world
