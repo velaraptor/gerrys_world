@@ -24,7 +24,7 @@ library(highcharter)
 
 source("helper.R")
 source("postgres_creds.R")
-aws_server = 'http://ec2-34-212-119-75.us-west-2.compute.amazonaws.com'
+aws_server = 'http://ec2-34-212-174-33.us-west-2.compute.amazonaws.com'
 
 server = function(input, output, session) {
 	##our reactive spdf polygon initiated 
@@ -92,6 +92,7 @@ server = function(input, output, session) {
     ## code beginning getting district polygons from db
 
 		fixed_spdf$df <- NULL
+
 		connection = connection_creds()
 	    congressional_geoms = dbGetQuery(connection,
 	    	"SELECT __gid AS gid,cd115fp, d,r,winner,st_astext(geom) AS geom FROM small_tracts_clean "
@@ -130,9 +131,9 @@ server = function(input, output, session) {
 	    district_spdf=merge(district_spdf,race_numbers,by="gid")
 
 	    dbDisconnect(connection)
-	    observe({
-        if(length(p_maps()) > 0 && p_maps()!='Current'){
-		
+	    observeEvent(
+        typeof(input$map_draw_edited_features)!="list",{
+			if(length(p_maps()) > 0 && p_maps()!='Current'){
 			
 			connection = connection_creds()
 			
@@ -178,10 +179,10 @@ server = function(input, output, session) {
 			    highlightOptions = highlightOptions(
 			      color='#A8A8A8', opacity = 1, weight = 3, fillOpacity = .25,
 			      bringToFront = TRUE, sendToBack = TRUE))
-			
+			}
 
         } 
-        })
+        )
     factpal = colorFactor(c("#3E66F3","#ff6750"), district_spdf$winner)
     popup = paste0("<h6><font color='#000000'>District Number:</font><b><font color='#2a9fd6'> ",
     			district_spdf@data$cd115fp,
