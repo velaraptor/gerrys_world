@@ -132,56 +132,56 @@ server = function(input, output, session) {
 
 	    dbDisconnect(connection)
 	    observeEvent(
-        typeof(input$map_draw_edited_features)!="list",{
-			if(length(p_maps()) > 0 && p_maps()!='Current'){
-			
-			connection = connection_creds()
-			
-			congressional_geoms = dbGetQuery(connection,
-				paste0("SELECT gid, cd115fp, d ,r, winner, hispanic, white, black, native, asian,
-					user_name, st_astext(geom) AS geom
-				 FROM user_data WHERE user_name ='",username,"' AND user_data.date = '",p_maps(),"'")
-				)
+        	p_maps(),{
+				if(length(p_maps()) > 0 && p_maps()!='Current'){
+				
+				connection = connection_creds()
+				
+				congressional_geoms = dbGetQuery(connection,
+					paste0("SELECT gid, cd115fp, d ,r, winner, hispanic, white, black, native, asian,
+						user_name, st_astext(geom) AS geom
+					 FROM user_data WHERE user_name ='",username,"' AND user_data.date = '",p_maps(),"'")
+					)
 
-			##read WKT of POSTGIS query for congressional districts
-			for(i in seq(nrow(congressional_geoms))){
-				if(i == 1){
-					p <- readWKT(congressional_geoms$geom[i], id = congressional_geoms$gid[i])
-				}
-				else{
-					p=rbind(p,readWKT(congressional_geoms$geom[i], id = congressional_geoms$gid[i]))
+				##read WKT of POSTGIS query for congressional districts
+				for(i in seq(nrow(congressional_geoms))){
+					if(i == 1){
+						p <- readWKT(congressional_geoms$geom[i], id = congressional_geoms$gid[i])
 					}
-			}
+					else{
+						p=rbind(p,readWKT(congressional_geoms$geom[i], id = congressional_geoms$gid[i]))
+						}
+				}
 
-			t = data.frame(congressional_geoms,row.names = congressional_geoms$gid)
-			congress_geom_sppdf = SpatialPolygonsDataFrame(p,t[-13])
-			crs.geo = CRS("+proj=longlat +datum=WGS84 +ellps=WGS84")
-			proj4string(congress_geom_sppdf) = crs.geo
+				t = data.frame(congressional_geoms,row.names = congressional_geoms$gid)
+				congress_geom_sppdf = SpatialPolygonsDataFrame(p,t[-13])
+				crs.geo = CRS("+proj=longlat +datum=WGS84 +ellps=WGS84")
+				proj4string(congress_geom_sppdf) = crs.geo
 
-			district_spdf = congress_geom_sppdf
-			dbDisconnect(connection)
-			fixed_spdf$df = district_spdf
-			
-			leafletProxy("map") %>% 
-			  clearShapes() %>%
-			  addPolygons( 
-			    data = fixed_spdf$df,
-			    fillOpacity = 0.15,
-			    color = 'white',
-			    fillColor = ~factpal(winner),
-			    weight = 1.5,
-			    layerId = fixed_spdf$df@data$gid,
-			    label = paste0("District ",fixed_spdf$df@data$cd115fp),
-			    smoothFactor = 0.2,
-			    stroke = TRUE, 
-			    opacity = 1,
-			    group='Congressional Districts',
-			    highlightOptions = highlightOptions(
-			      color='#A8A8A8', opacity = 1, weight = 3, fillOpacity = .25,
-			      bringToFront = TRUE, sendToBack = TRUE))
-			}
+				district_spdf = congress_geom_sppdf
+				dbDisconnect(connection)
+				fixed_spdf$df = district_spdf
+				
+				leafletProxy("map") %>% 
+				  clearShapes() %>%
+				  addPolygons( 
+				    data = fixed_spdf$df,
+				    fillOpacity = 0.15,
+				    color = 'white',
+				    fillColor = ~factpal(winner),
+				    weight = 1.5,
+				    layerId = fixed_spdf$df@data$gid,
+				    label = paste0("District ",fixed_spdf$df@data$cd115fp),
+				    smoothFactor = 0.2,
+				    stroke = TRUE, 
+				    opacity = 1,
+				    group='Congressional Districts',
+				    highlightOptions = highlightOptions(
+				      color='#A8A8A8', opacity = 1, weight = 3, fillOpacity = .25,
+				      bringToFront = TRUE, sendToBack = TRUE))
+				}
 
-        } 
+        	} 
         )
     factpal = colorFactor(c("#3E66F3","#ff6750"), district_spdf$winner)
     popup = paste0("<h6><font color='#000000'>District Number:</font><b><font color='#2a9fd6'> ",
